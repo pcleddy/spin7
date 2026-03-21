@@ -23,23 +23,23 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .hdr{text-align:center;margin-bottom:1.25rem}
 .hdr h1{font-size:2.4rem;background:linear-gradient(135deg,var(--purple),var(--pink));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hdr p{color:var(--muted);font-size:.8rem;margin-top:.2rem}
+.hdr p{color:var(--muted);font-size:.92rem;margin-top:.2rem}
 
 /* card */
 .card{background:var(--sur);border:1px solid var(--bor);border-radius:14px;
       padding:1rem 1.2rem;margin-bottom:.6rem}
-.lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+.lbl{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
      color:var(--muted);margin-bottom:.4rem}
 
 /* inputs */
 input[type=text]{width:100%;padding:.62rem .9rem;border-radius:8px;
   border:1.5px solid var(--bor);background:var(--bg);color:var(--text);
-  font-size:.95rem;outline:none;transition:border-color .2s;margin-bottom:.5rem}
+  font-size:1.05rem;outline:none;transition:border-color .2s;margin-bottom:.5rem}
 input[type=text]:focus{border-color:var(--purple)}
 
 /* select */
 select{width:100%;padding:.62rem .9rem;border-radius:8px;border:1.5px solid var(--bor);
-  background:var(--bg);color:var(--text);font-size:.95rem;outline:none;
+  background:var(--bg);color:var(--text);font-size:1.05rem;outline:none;
   margin-bottom:.5rem;appearance:none;cursor:pointer}
 select:focus{border-color:var(--purple)}
 
@@ -47,7 +47,7 @@ select:focus{border-color:var(--purple)}
 
 /* buttons */
 button{display:block;width:100%;padding:.65rem 1rem;border:none;border-radius:9px;
-  font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s}
+  font-size:1rem;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s}
 button:active:not(:disabled){transform:scale(.97)}
 button:disabled{opacity:.3;cursor:not-allowed}
 .b-purple{background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff}
@@ -56,13 +56,13 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .b-gold  {background:var(--gold);color:#fff}
 .b-dim   {background:var(--bor);color:var(--muted)}
 .b-red   {background:var(--red);color:#fff}
-.b-sm    {font-size:.82rem;padding:.5rem .9rem}
+.b-sm    {font-size:.9rem;padding:.5rem .9rem}
 .b-ghost {background:transparent;color:var(--purple);border:1.5px solid var(--purple)}
 
 .divider{display:flex;align-items:center;gap:.5rem;color:var(--muted);
-  font-size:.75rem;margin:.75rem 0}
+  font-size:.85rem;margin:.75rem 0}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--bor)}
-.err{color:var(--red);font-size:.78rem;margin-top:.2rem;min-height:.95rem}
+.err{color:var(--red);font-size:.86rem;margin-top:.2rem;min-height:.95rem}
 
 /* lobby */
 .idbox{display:flex;align-items:center;gap:.5rem;background:var(--bg);
@@ -70,18 +70,18 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .idtxt{flex:1;font-family:monospace;font-size:1.5rem;font-weight:700;
   letter-spacing:.18em;color:var(--purple)}
 .cpybtn{background:var(--bor);color:var(--text);border:none;border-radius:6px;
-  padding:.28rem .6rem;font-size:.73rem;cursor:pointer;width:auto}
+  padding:.28rem .6rem;font-size:.82rem;cursor:pointer;width:auto}
 
 /* pill */
 .pill{text-align:center;padding:.35rem .65rem;border-radius:7px;
-  font-size:.82rem;font-weight:600;margin-bottom:.55rem}
+  font-size:.92rem;font-weight:600;margin-bottom:.55rem}
 .p-you {background:linear-gradient(135deg,#9333ea18,#ec489918);color:var(--pink)}
 .p-them{background:#2a2a50;color:var(--muted)}
 .p-wait{background:#f0a50018;color:var(--gold)}
 
 /* strip */
 .strip{display:flex;justify-content:space-between;align-items:center;
-  font-size:.72rem;color:var(--muted);margin-bottom:.45rem}
+  font-size:.82rem;color:var(--muted);margin-bottom:.45rem}
 
 /* scoreboard */
 .scoreboard{display:grid;gap:.45rem;margin-bottom:.6rem}
@@ -89,14 +89,14 @@ button:disabled{opacity:.3;cursor:not-allowed}
   padding:.6rem .9rem;transition:border-color .3s}
 .sc-row.active{border-color:var(--purple);box-shadow:0 0 12px #9333ea25}
 .sc-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.3rem}
-.sc-name{font-size:.85rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-name{font-size:.95rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sc-name.me{color:var(--pink)}
 .sc-pts{font-size:1.4rem;font-weight:800;color:var(--text)}
 .progress{height:5px;background:var(--bor);border-radius:3px;overflow:hidden}
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--pink));
   border-radius:3px;transition:width .5s ease}
 .sc-hist{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.4rem}
-.hist-chip{font-size:.68rem;background:var(--bor);border-radius:5px;
+.hist-chip{font-size:.76rem;background:var(--bor);border-radius:5px;
   padding:.15rem .45rem;color:var(--muted)}
 .hist-chip.best{background:#9333ea30;color:var(--purple)}
 .hist-chip.pass{opacity:.5}
@@ -107,34 +107,33 @@ button:disabled{opacity:.3;cursor:not-allowed}
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   user-select:none;transition:transform .15s,background .15s,box-shadow .15s;
   flex-shrink:0}
-.tile-let{font-size:1.5rem;font-weight:800;color:var(--tile-t);line-height:1}
-.tile-val{font-size:.6rem;font-weight:700;color:var(--tile-v);line-height:1;margin-top:1px}
+.tile-let{font-size:1.65rem;font-weight:800;color:var(--tile-t);line-height:1}
+.tile-val{font-size:.68rem;font-weight:700;color:var(--tile-v);line-height:1;margin-top:1px}
 .tile.used{background:var(--tile-used);transform:translateY(-4px);
   box-shadow:0 6px 14px rgba(34,197,94,.3)}
 .tile.used .tile-let{color:var(--tile-used-t)}
 .tile.used .tile-val{color:#16a34a}
 .tile.unused-typed{opacity:.35}
 
-/* spin animation */
-@keyframes spin-in{
-  0%  {transform:translateY(-20px) rotate(-15deg);opacity:0}
-  60% {transform:translateY(3px) rotate(2deg);opacity:1}
-  100%{transform:translateY(0) rotate(0);opacity:1}
+/* tile drop-in animation — gentle fade+drop, no rotation */
+@keyframes tile-drop{
+  0%  {transform:translateY(-8px);opacity:0}
+  100%{transform:translateY(0);opacity:1}
 }
-.tile.spin-anim{animation:spin-in .35s ease forwards}
+.tile.spin-anim{animation:tile-drop .22s ease forwards}
 
 /* word input area */
 .word-area{margin-bottom:.55rem}
 .word-row{display:flex;gap:.5rem;align-items:stretch}
 #word-input{flex:1;padding:.65rem .9rem;border-radius:8px;
   border:2px solid var(--bor);background:var(--bg);color:var(--text);
-  font-size:1.2rem;letter-spacing:.12em;text-transform:uppercase;outline:none;
+  font-size:1.3rem;letter-spacing:.12em;text-transform:uppercase;outline:none;
   transition:border-color .2s;margin-bottom:0;font-weight:700}
 #word-input:focus{border-color:var(--purple)}
 #word-input.valid  {border-color:var(--green)}
 #word-input.invalid{border-color:var(--red)}
-#btn-play{flex:0 0 auto;width:auto;padding:.65rem 1.1rem;font-size:.88rem}
-.word-feedback{font-size:.78rem;min-height:.95rem;margin-top:.25rem}
+#btn-play{flex:0 0 auto;width:auto;padding:.65rem 1.1rem;font-size:.95rem}
+.word-feedback{font-size:.86rem;min-height:.95rem;margin-top:.25rem}
 .word-feedback.ok  {color:var(--green)}
 .word-feedback.bad {color:var(--red)}
 .word-pts{font-size:1rem;font-weight:700;color:var(--gold)}
@@ -145,29 +144,29 @@ button:disabled{opacity:.3;cursor:not-allowed}
 /* log */
 .log{background:var(--bg);border:1px solid var(--bor);border-radius:7px;
   padding:.5rem .65rem;max-height:130px;overflow-y:auto;
-  font-size:.73rem;color:var(--muted)}
+  font-size:.82rem;color:var(--muted)}
 .log-e{padding:.15rem 0;border-bottom:1px solid #2a2a5020}
 .log-e:last-child{border-bottom:none}
 
 /* win */
 .wcenter{text-align:center;padding:.5rem 0}
 .wicon{font-size:3.5rem}
-.wtitle{font-size:1.55rem;font-weight:700;margin:.35rem 0 .15rem;
+.wtitle{font-size:1.7rem;font-weight:700;margin:.35rem 0 .15rem;
   background:linear-gradient(135deg,var(--purple),var(--pink));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.wsub{color:var(--muted);margin-bottom:.9rem;font-size:.88rem}
-.wscores{margin-bottom:.9rem;font-size:.9rem;color:var(--muted)}
+.wsub{color:var(--muted);margin-bottom:.9rem;font-size:.96rem}
+.wscores{margin-bottom:.9rem;font-size:1rem;color:var(--muted)}
 .wscores div{margin:.2rem 0}
 
 /* toast */
 #toast{position:fixed;bottom:1.3rem;left:50%;transform:translateX(-50%);
   background:var(--red);color:#fff;padding:.42rem 1rem;border-radius:8px;
-  font-size:.8rem;font-weight:600;opacity:0;transition:opacity .3s;
+  font-size:.88rem;font-weight:600;opacity:0;transition:opacity .3s;
   pointer-events:none;white-space:nowrap;z-index:99}
 #toast.on{opacity:1}
 .pulse{animation:pulse 1.6s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.info-txt{font-size:.8rem;color:var(--muted);line-height:1.6}
+.info-txt{font-size:.9rem;color:var(--muted);line-height:1.6}
 .info-txt strong{color:var(--text)}
 </style>
 </head>
@@ -261,7 +260,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
     <span style="display:flex;gap:.65rem;align-items:center">
       <span id="g-info" style="color:var(--muted)"></span>
       <button onclick="doLeave()" style="background:none;border:none;color:var(--muted);
-        font-size:.72rem;cursor:pointer;padding:0;width:auto;text-decoration:underline">Leave</button>
+        font-size:.82rem;cursor:pointer;padding:0;width:auto;text-decoration:underline">Leave</button>
     </span>
   </div>
 
@@ -490,18 +489,24 @@ function updateUI(d){
 }
 
 // ── Tile rendering ────────────────────────────────────────────────────────────
+let _renderedLetterKey = '';
+
 function renderTiles(letters, highlight){
   const el=document.getElementById('tiles');
   const word=(document.getElementById('word-input').value||'').toUpperCase();
-  // Figure out which tile indices are used by the typed word
   const usedIdx=getUsedIndices(word, letters);
+
+  // Only animate when the letters themselves changed (new turn), not on every poll
+  const letterKey=letters.join('');
+  const doAnim=(letterKey !== _renderedLetterKey);
+  if(doAnim) _renderedLetterKey=letterKey;
 
   el.innerHTML='';
   letters.forEach((lt,i)=>{
     const div=document.createElement('div');
     const used=usedIdx.has(i);
-    div.className='tile spin-anim'+(used?' used':!highlight?'':!word?'':' unused-typed');
-    div.style.animationDelay=(i*40)+'ms';
+    div.className='tile'+(doAnim?' spin-anim':'')+(used?' used':!highlight?'':!word?'':' unused-typed');
+    if(doAnim) div.style.animationDelay=(i*40)+'ms';
     div.innerHTML=`<div class="tile-let">${lt}</div><div class="tile-val">${TV[lt]??0}</div>`;
     el.appendChild(div);
   });
