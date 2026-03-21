@@ -114,6 +114,9 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .tile.used .tile-let{color:var(--tile-used-t)}
 .tile.used .tile-val{color:#16a34a}
 .tile.unused-typed{opacity:.35}
+.tile.tile-blank{background:#2e2850;border:2px dashed var(--purple)}
+.tile.tile-blank .tile-let{color:var(--purple);font-size:1.4rem}
+.tile.tile-blank .tile-val{color:var(--muted);font-size:.6rem}
 
 /* tile drop-in animation — gentle fade+drop, no rotation */
 @keyframes tile-drop{
@@ -201,8 +204,9 @@ button:disabled{opacity:.3;cursor:not-allowed}
   <div class="card info-txt">
     <strong>How to play:</strong> On your turn, 7 letters appear. Type any valid English word
     using those letters — you can reuse the same letter as many times as you like.
-    Score = sum of Scrabble tile values. Game ends when a player hits the target
-    score or all rounds are done.
+    A ★ blank tile is a wildcard (worth 0 pts but lets you use any letter).
+    Score = sum of Scrabble tile values. First to the target wins that meta-round;
+    most meta-round wins takes the match.
   </div>
 </div>
 
@@ -213,20 +217,20 @@ button:disabled{opacity:.3;cursor:not-allowed}
     <p style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem" id="co-name-echo"></p>
     <div class="row2">
       <div>
-        <div class="lbl">Rounds</div>
-        <select id="sel-rounds">
-          <option value="3">3 rounds</option>
-          <option value="5" selected>5 rounds</option>
-          <option value="7">7 rounds</option>
+        <div class="lbl">Meta-Rounds</div>
+        <select id="sel-meta">
+          <option value="1">1 round</option>
+          <option value="3" selected>Best of 3</option>
+          <option value="5">Best of 5</option>
         </select>
       </div>
       <div>
         <div class="lbl">Score target</div>
         <select id="sel-target">
-          <option value="100" selected>100 pts</option>
-          <option value="150">150 pts</option>
-          <option value="200">200 pts</option>
-          <option value="250">250 pts</option>
+          <option value="100">100 pts</option>
+          <option value="200" selected>200 pts</option>
+          <option value="500">500 pts</option>
+          <option value="1000">1000 pts</option>
         </select>
       </div>
     </div>
@@ -284,7 +288,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
   <div class="word-area" id="word-area" style="display:none">
     <div class="word-row">
       <input type="text" id="word-input" placeholder="Type your word…"
-             maxlength="50" autocomplete="off" autocorrect="off" spellcheck="false"
+             maxlength="20" autocomplete="off" autocorrect="off" spellcheck="false"
              oninput="onWordInput()" onkeydown="if(event.key==='Enter')doPlay()"/>
       <button class="b-green" id="btn-play" onclick="doPlay()" disabled>Play ▶</button>
     </div>
@@ -398,11 +402,11 @@ function doCreate(){
 async function doCreateConfirm(){
   setErr('err-co','');
   const name    = document.getElementById('inp-name').value.trim();
-  const rounds  = parseInt(document.getElementById('sel-rounds').value);
+  const meta    = parseInt(document.getElementById('sel-meta').value);
   const target  = parseInt(document.getElementById('sel-target').value);
   const maxP    = parseInt(document.getElementById('sel-players').value);
   try{
-    const d=await api('POST','/spin7',{username:name,num_rounds:rounds,score_target:target,max_players:maxP});
+    const d=await api('POST','/spin7',{username:name,num_meta_rounds:meta,score_target:target,max_players:maxP});
     G.gameId=d.game_id; G.token=d.player_token; G.username=name;
     save();
     document.getElementById('lob-id').textContent=d.game_id;
@@ -471,7 +475,7 @@ function updateUI(d){
 
   document.getElementById('g-id').textContent=d.game_id;
   document.getElementById('g-info').textContent=
-    `R${d.round_number}/${d.num_rounds} · 🎯${d.score_target}`;
+    `MR${d.meta_round}/${d.num_meta_rounds} · 🎯${d.score_target}`;
 
   const myTurn=d.current_player===G.username && d.status==='playing';
   G.myTurn=myTurn;
@@ -530,18 +534,23 @@ function renderTiles(letters, highlight){
   letters.forEach((lt,i)=>{
     const div=document.createElement('div');
     const used=usedIdx.has(i);
-    div.className='tile'+(doAnim?' spin-anim':'')+(used?' used':!highlight?'':!word?'':' unused-typed');
+    const isBlank=(lt==='*');
+    div.className='tile'+(isBlank?' tile-blank':'')+(doAnim?' spin-anim':'')+(used?' used':!highlight?'':!word?'':' unused-typed');
     if(doAnim) div.style.animationDelay=(i*40)+'ms';
-    div.innerHTML=`<div class="tile-let">${lt}</div><div class="tile-val">${TV[lt]??0}</div>`;
+    const display=isBlank?'★':lt;
+    div.innerHTML=`<div class="tile-let">${display}</div><div class="tile-val">${isBlank?'wild':TV[lt]??0}</div>`;
     el.appendChild(div);
   });
 }
 
 function getUsedIndices(word, letters){
-  // Letters can be reused — highlight every tile whose letter appears in the word
   const inWord=new Set(word.split(''));
+  const hasBlank=letters.includes('*');
   const used=new Set();
-  letters.forEach((lt,i)=>{ if(inWord.has(lt)) used.add(i); });
+  letters.forEach((lt,i)=>{
+    if(lt==='*' && word.length>0) used.add(i);        // blank always lights up when typing
+    else if(hasBlank || inWord.has(lt)) used.add(i);  // wildcard covers everything, else normal
+  });
   return used;
 }
 
@@ -571,8 +580,7 @@ function onWordInput(){
 }
 
 function canSpell(word, letters){
-  // Letters can be reused — each letter in the word only needs to
-  // appear at least once somewhere in the hand
+  if(letters.includes('*')) return true;  // blank = wildcard, any word is valid
   const hand=new Set(letters);
   return word.split('').every(ch=>hand.has(ch));
 }
@@ -592,10 +600,13 @@ function renderScoreboard(d){
         ? `<span class="hist-chip pass">pass</span>`
         : `<span class="hist-chip${h.points===Math.max(...p.history.map(x=>x.points))?' best':''}">${h.word} +${h.points}</span>`
     ).join('');
+    const winsStr=d.num_meta_rounds>1
+      ? `<span style="font-size:.78rem;color:var(--gold);margin-left:.4rem">★${p.meta_wins}W</span>`
+      : '';
     el.innerHTML+=`
       <div class="sc-row${isActive?' active':''}">
         <div class="sc-top">
-          <span class="sc-name${isMe?' me':''}">${esc(p.username)}${isMe?' (you)':''}</span>
+          <span class="sc-name${isMe?' me':''}">${esc(p.username)}${isMe?' (you)':''}${winsStr}</span>
           <span class="sc-pts">${p.score}<span style="font-size:.65rem;color:var(--muted);font-weight:400"> / ${d.score_target}</span></span>
         </div>
         <div class="progress"><div class="prog-fill" style="width:${pct}%"></div></div>
@@ -642,10 +653,14 @@ function handleWin(d){
   document.getElementById('w-icon').textContent  = iWon?'🏆':'🎰';
   document.getElementById('w-title').textContent = iWon?'You won!':`${d.winner} won!`;
   document.getElementById('w-sub').textContent   = iWon?'Nice game! 🎉':'Better luck next time.';
-  const sorted=[...d.players].sort((a,b)=>b.score-a.score);
+  const sorted=[...d.players].sort((a,b)=>b.meta_wins-a.meta_wins);
+  const showWins=d.num_meta_rounds>1;
   document.getElementById('w-scores').innerHTML  =
-    `<div style="margin-bottom:.3rem;color:var(--muted)">Final scores</div>`+
-    sorted.map(p=>`<div>${esc(p.username)}: <strong>${p.score} pts</strong></div>`).join('');
+    `<div style="margin-bottom:.3rem;color:var(--muted)">${showWins?'Meta-round wins':'Final score'}</div>`+
+    sorted.map(p=>showWins
+      ? `<div>${esc(p.username)}: <strong>${p.meta_wins} win${p.meta_wins!==1?'s':''}</strong></div>`
+      : `<div>${esc(p.username)}: <strong>${p.score} pts</strong></div>`
+    ).join('');
   show('win');
 }
 
