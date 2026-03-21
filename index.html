@@ -233,7 +233,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
 <div class="scr on" id="s-setup">
   <div class="card">
     <div class="lbl">Your name</div>
-    <input type="text" id="inp-name" placeholder="Enter your name" maxlength="20"/>
+    <input type="text" id="inp-name" placeholder="Enter your name" maxlength="20" oninput="rememberName(this.value)"/>
     <button class="b-purple" onclick="doCreate()">🎰 Create New Game</button>
     <div class="err" id="err-c"></div>
     <div class="divider">or join a game</div>
@@ -246,7 +246,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
   <div class="card info-txt">
     <strong>How to play:</strong> On your turn, 7 unique letters appear. Type any valid English word
     using those letters — you can reuse the same letter as many times as you like.
-    A ★ joker is worth 0 points and can stand in for any letter.
+    A ★ joker is worth 0 points and can stand in for one missing letter.
     Score = sum of Scrabble tile values. First to the target wins that meta-round;
     most meta-round wins takes the match.
   </div>
@@ -301,9 +301,8 @@ button:disabled{opacity:.3;cursor:not-allowed}
     <button class="b-ghost b-sm" onclick="copyLink()" style="margin-bottom:.6rem">🔗 Copy join link</button>
     <div class="pill p-wait pulse" id="lob-pill">⏳ Waiting for players…</div>
     <div id="lob-players" style="font-size:.8rem;color:var(--muted);margin-bottom:.6rem"></div>
-    <button class="b-purple" id="btn-start" onclick="doStart()" disabled>▶️ Start Game</button>
-    <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:.4rem">
-      (Need at least 2 players · only creator can start)
+    <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:.4rem" id="lob-note">
+      Auto-starts when the lobby is full.
     </div>
   </div>
 </div>
@@ -396,6 +395,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const API = 'https://masterp99-spin7-api.hf.space';
+const NAME_KEY = 'spin7_name';
 
 const TV = {A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:7,K:6,L:1,M:3,
             N:1,O:1,P:3,Q:9,R:1,S:1,T:1,U:1,V:4,W:4,X:7,Y:4,Z:9};
@@ -420,12 +420,30 @@ let G = {
   const p=new URLSearchParams(location.search).get('game');
   if(p) document.getElementById('inp-gid').value=p.toUpperCase();
 })();
+(function(){
+  const savedName = getRememberedName();
+  if(savedName) document.getElementById('inp-name').value = savedName;
+})();
 
 function save(){ sessionStorage.setItem('spin7',JSON.stringify({gameId:G.gameId,token:G.token,username:G.username})); }
 function clearSess(){
   sessionStorage.removeItem('spin7');
   if(G.pollTimer) clearInterval(G.pollTimer);
   G={gameId:null,token:null,username:null,myTurn:false,pollTimer:null,lastStatus:null,pendingCreate:null};
+}
+function getRememberedName(){
+  try{ return localStorage.getItem(NAME_KEY)||''; }
+  catch(e){ return ''; }
+}
+function rememberName(name){
+  const clean=String(name||'').trim().slice(0,20);
+  try{
+    if(clean) localStorage.setItem(NAME_KEY, clean);
+    else localStorage.removeItem(NAME_KEY);
+  }catch(e){}
+}
+function hydrateRememberedName(){
+  document.getElementById('inp-name').value=getRememberedName();
 }
 function show(id){ document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on')); document.getElementById('s-'+id).classList.add('on'); }
 function setErr(id,msg){ document.getElementById(id).textContent=msg; }
@@ -461,6 +479,7 @@ function doCreate(){
   setErr('err-c','');
   const name=document.getElementById('inp-name').value.trim();
   if(!name){ setErr('err-c','Enter your name.'); return; }
+  rememberName(name);
   document.getElementById('co-name-echo').textContent=`Creating as: ${name}`;
   show('create-opts');
 }
@@ -474,6 +493,7 @@ async function doCreateConfirm(){
   try{
     const d=await api('POST','/spin7',{username:name,num_meta_rounds:meta,score_target:target,max_players:maxP});
     G.gameId=d.game_id; G.token=d.player_token; G.username=name;
+    rememberName(name);
     save();
     document.getElementById('lob-id').textContent=d.game_id;
     show('lobby'); startPoll();
@@ -489,15 +509,9 @@ async function doJoin(){
   try{
     const d=await api('POST',`/spin7/${gid}/join`,{username:name});
     G.gameId=gid; G.token=d.player_token; G.username=d.username||name;
+    rememberName(G.username);
     save(); show('game'); startPoll();
   }catch(e){ setErr('err-j',e.message); }
-}
-
-async function doStart(){
-  try{
-    const d=await api('POST',`/spin7/${G.gameId}/start`,{player_token:G.token});
-    show('game'); updateUI(d);
-  }catch(e){ toast(e.message); }
 }
 
 async function rejoin(){
@@ -528,11 +542,11 @@ function updateLobby(d){
   document.getElementById('lob-players').textContent=
     `Players (${d.players.length}/${d.max_players}): ${names}`;
   const pill=document.getElementById('lob-pill');
-  pill.textContent=`⏳ ${d.players.length}/${d.max_players} joined…`;
-  // Enable start for creator if ≥2 players
-  const startBtn=document.getElementById('btn-start');
-  const isCreator = d.players.length > 0 && d.players[0].username===G.username;
-  startBtn.disabled = !isCreator || d.players.length < 2;
+  pill.textContent=`⏳ ${d.players.length}/${d.max_players} joined… auto-start at ${d.max_players}`;
+  const remaining = d.max_players - d.players.length;
+  document.getElementById('lob-note').textContent = remaining > 0
+    ? `${remaining} more player${remaining===1?'':'s'} needed before auto-start.`
+    : 'Auto-starting…';
 }
 
 // ── Main game UI ──────────────────────────────────────────────────────────────
@@ -683,13 +697,24 @@ function renderTiles(letters, highlight){
 
 function getUsedIndices(word, letters){
   const inWord=new Set(word.split(''));
-  const hasBlank=letters.includes('*');
+  const analysis=getSpellAnalysis(word, letters);
   const used=new Set();
   letters.forEach((lt,i)=>{
-    if(lt==='*' && word.length>0) used.add(i);        // joker always lights up when typing
-    else if(hasBlank || inWord.has(lt)) used.add(i);  // joker covers everything, else normal
+    if(lt==='*' && analysis.missing.length>0 && analysis.missing.length<=1) used.add(i);
+    else if(inWord.has(lt)) used.add(i);
   });
   return used;
+}
+
+function getSpellAnalysis(word, letters){
+  const hand=new Set(letters.filter(lt=>lt!=='*'));
+  const missing=[...new Set(word.split('').filter(ch=>!hand.has(ch)))];
+  const hasJoker=letters.includes('*');
+  return {
+    missing,
+    hasJoker,
+    canSpell: missing.length===0 || (hasJoker && missing.length===1),
+  };
 }
 
 // ── Word input feedback ───────────────────────────────────────────────────────
@@ -703,9 +728,12 @@ function onWordInput(){
   if(!word){ fb.textContent=''; inp.className=''; playBtn.disabled=true; return; }
 
   // Check can make
-  const canMake=canSpell(word,d_letters);
-  if(!canMake){
-    fb.textContent='⚠ You don\'t have these letters'; fb.className='word-feedback bad';
+  const analysis=getSpellAnalysis(word,d_letters);
+  if(!analysis.canSpell){
+    fb.textContent=(analysis.hasJoker && analysis.missing.length>1)
+      ? '⚠ Joker can only cover one missing letter'
+      : '⚠ You don\'t have these letters';
+    fb.className='word-feedback bad';
     inp.className='invalid'; playBtn.disabled=true;
     renderTiles(d_letters,true); return;
   }
@@ -718,9 +746,7 @@ function onWordInput(){
 }
 
 function canSpell(word, letters){
-  if(letters.includes('*')) return true;  // joker can stand in for any letter
-  const hand=new Set(letters);
-  return word.split('').every(ch=>hand.has(ch));
+  return getSpellAnalysis(word, letters).canSpell;
 }
 
 function renderMetaBanner(banner){
@@ -828,7 +854,8 @@ function handleWin(d){
 // ── Reset / Leave ─────────────────────────────────────────────────────────────
 function doReset(){
   clearSess();
-  ['inp-name','inp-gid'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('inp-gid').value='';
+  hydrateRememberedName();
   ['err-c','err-j','err-co'].forEach(id=>document.getElementById(id).textContent='');
   history.replaceState({},'',location.pathname);
   show('setup');
@@ -838,6 +865,7 @@ function doLeave(){
   if(G.pollTimer) clearInterval(G.pollTimer);
   clearSess();
   history.replaceState({},'',location.pathname);
+  hydrateRememberedName();
   show('setup');
 }
 
