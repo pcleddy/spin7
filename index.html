@@ -284,7 +284,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
   <!-- 7 letter tiles -->
   <div class="tiles-wrap" id="tiles"></div>
 
-  <!-- Word input (visible on your turn) -->
+  <!-- Word input — always visible when game is playing -->
   <div class="word-area" id="word-area" style="display:none">
     <div class="word-row">
       <input type="text" id="word-input" placeholder="Type your word…"
@@ -300,6 +300,10 @@ button:disabled{opacity:.3;cursor:not-allowed}
     <button class="b-dim b-sm" id="btn-pass" onclick="doPass()">⏭️ Pass (0 pts)</button>
     <button class="b-dim b-sm" onclick="doLeave()" style="color:var(--muted)">🚪 Leave Game</button>
   </div>
+
+  <!-- Waiting indicator (shown after submitting, until round resolves) -->
+  <div id="waiting-bar" style="display:none;text-align:center;padding:.5rem 0;
+       font-size:.88rem;color:var(--muted)">⏳ Waiting for others…</div>
 
   <!-- Scoreboard -->
   <div class="scoreboard" id="scoreboard"></div>
@@ -475,35 +479,59 @@ function updateUI(d){
 
   document.getElementById('g-id').textContent=d.game_id;
   document.getElementById('g-info').textContent=
-    `MR${d.meta_round}/${d.num_meta_rounds} · 🎯${d.score_target}`;
+    `MR${d.meta_round}/${d.num_meta_rounds} · R${d.round_num} · 🎯${d.score_target}`;
 
-  const myTurn=d.current_player===G.username && d.status==='playing';
-  G.myTurn=myTurn;
+  const iHaveSubmitted = d.submitted_players.includes(G.username);
+  const playing = d.status==='playing';
 
-  // Pill
+  // Pill — shows who's still thinking
   const pill=document.getElementById('g-pill');
-  if(myTurn){
-    pill.textContent='⚡ Your turn — type a word from your letters!';
-    pill.className='pill p-you';
+  if(!playing){
+    pill.textContent='Game over'; pill.className='pill p-them';
+  } else if(iHaveSubmitted){
+    const waiting=d.players
+      .map(p=>p.username)
+      .filter(n=>!d.submitted_players.includes(n));
+    pill.textContent= waiting.length
+      ? `⏳ Waiting for ${waiting.join(', ')}…`
+      : '✅ All in — revealing…';
+    pill.className='pill p-wait';
   } else {
-    pill.textContent=d.status==='playing'
-      ? `⏳ ${d.current_player}'s turn…`
-      : 'Game over';
-    pill.className='pill p-them';
+    pill.textContent='⚡ Type your word — opponents can\'t see it yet!';
+    pill.className='pill p-you';
   }
 
   // Tiles
-  renderTiles(d.current_letters, myTurn);
+  renderTiles(d.current_letters, playing && !iHaveSubmitted);
 
-  // Word input area
-  const wa=document.getElementById('word-area');
-  const ar=document.getElementById('act-row');
-  wa.style.display=myTurn?'block':'none';
-  ar.style.display=myTurn?'grid':'none';
-  if(!myTurn){
-    document.getElementById('word-input').value='';
+  // Word input: show while playing; lock after submitting
+  const wa  = document.getElementById('word-area');
+  const ar  = document.getElementById('act-row');
+  const wb  = document.getElementById('waiting-bar');
+  const inp = document.getElementById('word-input');
+
+  if(playing){
+    wa.style.display  = 'block';
+    ar.style.display  = iHaveSubmitted ? 'none' : 'grid';
+    wb.style.display  = iHaveSubmitted ? 'block' : 'none';
+    inp.disabled      = iHaveSubmitted;
+    document.getElementById('btn-play').disabled = iHaveSubmitted || !inp.value.trim();
+    if(iHaveSubmitted){
+      inp.style.opacity='.45';
+    } else {
+      inp.style.opacity='1';
+    }
+  } else {
+    wa.style.display='none'; ar.style.display='none'; wb.style.display='none';
+  }
+
+  // When letters change (new round resolved), unlock and clear the input
+  const newKey=d.current_letters.join('');
+  if(newKey !== (window._lastLetterKey||'')){
+    inp.value=''; inp.className=''; inp.disabled=false; inp.style.opacity='1';
     document.getElementById('word-fb').textContent='';
-    document.getElementById('word-input').className='';
+    document.getElementById('btn-play').disabled=true;
+    window._lastLetterKey=newKey;
   }
 
   // Scoreboard
@@ -618,16 +646,13 @@ function renderScoreboard(d){
 // ── Play / Pass ───────────────────────────────────────────────────────────────
 async function doPlay(){
   const word=document.getElementById('word-input').value.trim().toUpperCase();
-  if(!word||!G.myTurn) return;
+  if(!word) return;
   document.getElementById('btn-play').disabled=true;
   try{
     const d=await api('POST',`/spin7/${G.gameId}/play`,{player_token:G.token,word});
-    document.getElementById('word-input').value='';
-    document.getElementById('word-fb').textContent='';
-    document.getElementById('word-input').className='';
     window._lastLetters=d.current_letters||[];
     if(d.status==='finished'){ handleWin(d); return; }
-    toast(`✅ ${word} scored!`,'#22c55e');
+    // Keep word visible; updateUI will lock input until round resolves
     updateUI(d);
   }catch(e){
     toast(e.message);
@@ -636,10 +661,8 @@ async function doPlay(){
 }
 
 async function doPass(){
-  if(!G.myTurn) return;
   try{
     const d=await api('POST',`/spin7/${G.gameId}/pass`,{player_token:G.token});
-    document.getElementById('word-input').value='';
     if(d.status==='finished'){ handleWin(d); return; }
     updateUI(d);
   }catch(e){ toast(e.message); }
