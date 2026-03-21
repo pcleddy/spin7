@@ -191,8 +191,9 @@ button:disabled{opacity:.3;cursor:not-allowed}
   </div>
   <div class="card info-txt">
     <strong>How to play:</strong> On your turn, 7 letters appear. Type any valid English word
-    you can make from them and hit Play. Score = sum of Scrabble tile values.
-    Game ends when a player hits the target score or all rounds are done.
+    using those letters — you can reuse the same letter as many times as you like.
+    Score = sum of Scrabble tile values. Game ends when a player hits the target
+    score or all rounds are done.
   </div>
 </div>
 
@@ -507,13 +508,10 @@ function renderTiles(letters, highlight){
 }
 
 function getUsedIndices(word, letters){
-  // Greedily match word letters to tile indices
+  // Letters can be reused — highlight every tile whose letter appears in the word
+  const inWord=new Set(word.split(''));
   const used=new Set();
-  const pool=letters.map((lt,i)=>({lt,i}));
-  for(const ch of word){
-    const idx=pool.findIndex(p=>!used.has(p.i) && p.lt===ch);
-    if(idx>=0) used.add(pool[idx].i);
-  }
+  letters.forEach((lt,i)=>{ if(inWord.has(lt)) used.add(i); });
   return used;
 }
 
@@ -543,15 +541,11 @@ function onWordInput(){
 }
 
 function canSpell(word, letters){
-  const pool=list(letters);
-  for(const ch of word){
-    const i=pool.indexOf(ch);
-    if(i<0) return false;
-    pool.splice(i,1);
-  }
-  return true;
+  // Letters can be reused — each letter in the word only needs to
+  // appear at least once somewhere in the hand
+  const hand=new Set(letters);
+  return word.split('').every(ch=>hand.has(ch));
 }
-function list(a){ return [...a]; }
 
 // ── Scoreboard ────────────────────────────────────────────────────────────────
 function renderScoreboard(d){
