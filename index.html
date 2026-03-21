@@ -6,8 +6,8 @@
 <title>🎰 Spin7</title>
 <style>
 :root{
-  --bg:#0d0d1f;--sur:#16162e;--bor:#2a2a50;--text:#eeeef8;--muted:#6a6a9a;
-  --purple:#9333ea;--pink:#ec4899;--green:#22c55e;--gold:#f0a500;--red:#e94560;
+  --bg:#1c1c35;--sur:#252540;--bor:#3d3d68;--text:#f2f2ff;--muted:#a0a0cc;
+  --purple:#b47ef5;--pink:#f472b6;--green:#4ade80;--gold:#fbbf24;--red:#f1536a;
   --tile:#f5e6c8;--tile-t:#2c1810;--tile-v:#8b5e3c;
   --tile-used:#86efac;--tile-used-t:#14532d;
 }
@@ -158,6 +158,16 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .wscores{margin-bottom:.9rem;font-size:1rem;color:var(--muted)}
 .wscores div{margin:.2rem 0}
 
+/* chat */
+.chat-log{background:var(--bg);border:1px solid var(--bor);border-radius:7px;
+  padding:.5rem .65rem;max-height:120px;overflow-y:auto;
+  font-size:.82rem;margin-bottom:.45rem}
+.chat-msg{padding:.18rem 0;border-bottom:1px solid #3d3d6820;line-height:1.4}
+.chat-msg:last-child{border-bottom:none}
+.chat-who{font-weight:700;color:var(--purple);margin-right:.35rem}
+.chat-who.me{color:var(--pink)}
+.chat-row{display:flex;gap:.45rem;align-items:center}
+
 /* toast */
 #toast{position:fixed;bottom:1.3rem;left:50%;transform:translateX(-50%);
   background:var(--red);color:#fff;padding:.42rem 1rem;border-radius:8px;
@@ -294,6 +304,18 @@ button:disabled{opacity:.3;cursor:not-allowed}
   <div class="card">
     <div class="lbl">Activity</div>
     <div class="log" id="g-log"></div>
+  </div>
+
+  <!-- Chat -->
+  <div class="card" id="chat-card">
+    <div class="lbl">Chat</div>
+    <div class="chat-log" id="chat-log"></div>
+    <div class="chat-row">
+      <input type="text" id="chat-input" placeholder="Say something…" maxlength="200"
+             autocomplete="off" onkeydown="if(event.key==='Enter')doChat()"
+             style="margin-bottom:0;font-size:.92rem"/>
+      <button class="b-purple b-sm" onclick="doChat()" style="width:auto;flex-shrink:0">Send</button>
+    </div>
   </div>
 
 </div>
@@ -486,6 +508,9 @@ function updateUI(d){
   // Log
   const logEl=document.getElementById('g-log');
   logEl.innerHTML=[...d.log].reverse().map(l=>`<div class="log-e">${esc(l)}</div>`).join('');
+
+  // Chat
+  renderChat(d.chat);
 }
 
 // ── Tile rendering ────────────────────────────────────────────────────────────
@@ -651,6 +676,31 @@ function copyLink(){
   const id=document.getElementById('lob-id').textContent;
   navigator.clipboard.writeText(`${location.origin}${location.pathname}?game=${id}`)
     .then(()=>toast('Link copied!','#9333ea'));
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+let _lastChatLen = 0;
+
+function renderChat(msgs){
+  const el=document.getElementById('chat-log');
+  if(!msgs||!msgs.length){ el.innerHTML='<span style="color:var(--muted);font-size:.78rem">No messages yet…</span>'; _lastChatLen=0; return; }
+  if(msgs.length===_lastChatLen) return;  // nothing new
+  _lastChatLen=msgs.length;
+  el.innerHTML=msgs.map(m=>`
+    <div class="chat-msg">
+      <span class="chat-who${m.username===G.username?' me':''}">${esc(m.username)}</span>${esc(m.text)}
+    </div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+async function doChat(){
+  const inp=document.getElementById('chat-input');
+  const msg=inp.value.trim();
+  if(!msg||!G.token||!G.gameId) return;
+  inp.value='';
+  try{
+    await api('POST',`/spin7/${G.gameId}/chat`,{player_token:G.token,message:msg});
+  }catch(e){ toast(e.message); }
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
