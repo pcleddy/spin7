@@ -108,15 +108,42 @@ button:disabled{opacity:.3;cursor:not-allowed}
   user-select:none;transition:transform .15s,background .15s,box-shadow .15s;
   flex-shrink:0}
 .tile-let{font-size:1.65rem;font-weight:800;color:var(--tile-t);line-height:1}
-.tile-val{font-size:.68rem;font-weight:700;color:var(--tile-v);line-height:1;margin-top:1px}
+.tile-val{
+  font-size:.68rem;font-weight:700;color:var(--tile-v);line-height:1;margin-top:1px;
+  display:inline-block;transform-origin:50% 55%;
+  transform:
+    translate(var(--pip-x,0px), var(--pip-y,0px))
+    scaleX(var(--pip-sx,1))
+    scaleY(var(--pip-sy,1))
+    rotate(var(--pip-r,0deg));
+  letter-spacing:var(--pip-track,0);
+}
 .tile.used{background:var(--tile-used);transform:translateY(-4px);
   box-shadow:0 6px 14px rgba(34,197,94,.3)}
 .tile.used .tile-let{color:var(--tile-used-t)}
 .tile.used .tile-val{color:#16a34a}
 .tile.unused-typed{opacity:.35}
-.tile.tile-blank{background:#2e2850;border:2px dashed var(--purple)}
-.tile.tile-blank .tile-let{color:var(--purple);font-size:1.4rem}
-.tile.tile-blank .tile-val{color:var(--muted);font-size:.6rem}
+.tile.tile-blank{
+  background:linear-gradient(155deg,#1d1835 0%,#38245d 58%,#5a294f 100%);
+  border:1.5px solid rgba(244,114,182,.55);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)
+}
+.tile.tile-blank.used{
+  border-color:#fbbf24;
+  box-shadow:0 8px 18px rgba(15,23,42,.32), inset 0 0 0 1px rgba(255,255,255,.08)
+}
+.tile.tile-blank .tile-val{
+  color:#fde68a;font-size:.56rem;letter-spacing:.12em;text-transform:uppercase
+}
+.joker-icon{
+  width:28px;height:22px;display:block;margin-bottom:2px;
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.28))
+}
+.joker-base{fill:rgba(255,255,255,.12);stroke:rgba(255,255,255,.24);stroke-width:1.5}
+.joker-left{fill:#f472b6}
+.joker-mid{fill:#b47ef5}
+.joker-right{fill:#4ade80}
+.joker-bell{fill:#fbbf24}
 
 /* tile drop-in animation — gentle fade+drop, no rotation */
 @keyframes tile-drop{
@@ -143,6 +170,21 @@ button:disabled{opacity:.3;cursor:not-allowed}
 
 /* action row */
 .act-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.6rem}
+
+/* meta-round celebration */
+.meta-banner{background:
+  radial-gradient(circle at top, rgba(251,191,36,.18), rgba(180,126,245,.14) 45%, rgba(37,37,64,.98) 100%);
+  border:1.5px solid rgba(251,191,36,.35)}
+.mb-head{font-size:1.35rem;font-weight:800;color:var(--text);text-align:center}
+.mb-sub{font-size:.92rem;color:var(--muted);text-align:center;margin:.3rem 0 .9rem}
+.mb-scores{display:grid;gap:.45rem;margin-bottom:.8rem}
+.mb-row{display:flex;justify-content:space-between;align-items:center;gap:.75rem;
+  padding:.55rem .7rem;border-radius:9px;background:rgba(28,28,53,.6);border:1px solid rgba(61,61,104,.6)}
+.mb-row.win{border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.12)}
+.mb-name{font-weight:700}
+.mb-name.me{color:var(--pink)}
+.mb-score{font-size:.9rem;color:var(--muted);text-align:right}
+.mb-note{font-size:.78rem;color:var(--muted);text-align:center;margin-top:.55rem}
 
 /* log */
 .log{background:var(--bg);border:1px solid var(--bor);border-radius:7px;
@@ -202,9 +244,9 @@ button:disabled{opacity:.3;cursor:not-allowed}
     <div class="err" id="err-j"></div>
   </div>
   <div class="card info-txt">
-    <strong>How to play:</strong> On your turn, 7 letters appear. Type any valid English word
+    <strong>How to play:</strong> On your turn, 7 unique letters appear. Type any valid English word
     using those letters — you can reuse the same letter as many times as you like.
-    A ★ blank tile is a wildcard (worth 0 pts but lets you use any letter).
+    A ★ joker is worth 0 points and can stand in for any letter.
     Score = sum of Scrabble tile values. First to the target wins that meta-round;
     most meta-round wins takes the match.
   </div>
@@ -305,6 +347,15 @@ button:disabled{opacity:.3;cursor:not-allowed}
   <div id="waiting-bar" style="display:none;text-align:center;padding:.5rem 0;
        font-size:.88rem;color:var(--muted)">⏳ Waiting for others…</div>
 
+  <div class="card meta-banner" id="meta-banner" style="display:none">
+    <div class="lbl">Meta-Round Celebration</div>
+    <div class="mb-head" id="mb-head"></div>
+    <div class="mb-sub" id="mb-sub"></div>
+    <div class="mb-scores" id="mb-scores"></div>
+    <button class="b-gold" id="btn-continue" onclick="doContinue()">Continue</button>
+    <div class="mb-note">Any player can continue to the next meta-round.</div>
+  </div>
+
   <!-- Scoreboard -->
   <div class="scoreboard" id="scoreboard"></div>
 
@@ -346,8 +397,8 @@ button:disabled{opacity:.3;cursor:not-allowed}
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const API = 'https://masterp99-spin7-api.hf.space';
 
-const TV = {A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:8,K:5,L:1,M:3,
-            N:1,O:1,P:3,Q:10,R:1,S:1,T:1,U:1,V:4,W:4,X:8,Y:4,Z:10};
+const TV = {A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:7,K:6,L:1,M:3,
+            N:1,O:1,P:3,Q:9,R:1,S:1,T:1,U:1,V:4,W:4,X:7,Y:4,Z:9};
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let G = {
@@ -494,11 +545,15 @@ function updateUI(d){
 
   const iHaveSubmitted = d.submitted_players.includes(G.username);
   const playing = d.status==='playing';
+  const metaBanner = playing ? d.meta_round_banner : null;
 
   // Pill — shows who's still thinking
   const pill=document.getElementById('g-pill');
   if(!playing){
     pill.textContent='Game over'; pill.className='pill p-them';
+  } else if(metaBanner){
+    pill.textContent=metaBanner.headline;
+    pill.className='pill p-wait';
   } else if(iHaveSubmitted){
     const waiting=d.players
       .map(p=>p.username)
@@ -513,15 +568,25 @@ function updateUI(d){
   }
 
   // Tiles
-  renderTiles(d.current_letters, playing && !iHaveSubmitted);
+  renderTiles(d.current_letters, playing && !iHaveSubmitted && !metaBanner);
 
   // Word input: show while playing; lock after submitting
   const wa  = document.getElementById('word-area');
   const ar  = document.getElementById('act-row');
   const wb  = document.getElementById('waiting-bar');
+  const mb  = document.getElementById('meta-banner');
   const inp = document.getElementById('word-input');
 
-  if(playing){
+  if(playing && metaBanner){
+    wa.style.display  = 'none';
+    ar.style.display  = 'none';
+    wb.style.display  = 'none';
+    mb.style.display  = 'block';
+    inp.disabled      = true;
+    inp.style.opacity = '.45';
+    renderMetaBanner(metaBanner);
+  } else if(playing){
+    mb.style.display  = 'none';
     wa.style.display  = 'block';
     ar.style.display  = iHaveSubmitted ? 'none' : 'grid';
     wb.style.display  = iHaveSubmitted ? 'block' : 'none';
@@ -533,7 +598,7 @@ function updateUI(d){
       inp.style.opacity='1';
     }
   } else {
-    wa.style.display='none'; ar.style.display='none'; wb.style.display='none';
+    wa.style.display='none'; ar.style.display='none'; wb.style.display='none'; mb.style.display='none';
   }
 
   // When letters change (new round resolved), unlock and clear the input
@@ -558,6 +623,26 @@ function updateUI(d){
 
 // ── Tile rendering ────────────────────────────────────────────────────────────
 let _renderedLetterKey = '';
+const PIP_STYLES = [
+  {x:'-1.2px', y:'0px',   sx:'0.91', sy:'1.08', r:'-8deg', track:'0.015em'},
+  {x:'0.8px',  y:'0.3px', sx:'1.08', sy:'0.9',  r:'6deg',  track:'-0.01em'},
+  {x:'-0.5px', y:'0.8px', sx:'0.96', sy:'1.12', r:'-4deg', track:'0.02em'},
+  {x:'1.1px',  y:'-0.2px',sx:'1.12', sy:'0.92', r:'9deg',  track:'-0.015em'},
+  {x:'-0.9px', y:'-0.4px',sx:'0.94', sy:'1.03', r:'-11deg',track:'0.01em'},
+  {x:'0.4px',  y:'0.6px', sx:'1.05', sy:'0.96', r:'4deg',  track:'0.005em'},
+  {x:'-0.2px', y:'-0.7px',sx:'0.98', sy:'1.14', r:'-6deg', track:'0.018em'},
+];
+
+function applyPipStyle(tile, letter, index){
+  const seed=(letter==='*' ? 31 : letter.charCodeAt(0)) + (index*7);
+  const pip=PIP_STYLES[seed % PIP_STYLES.length];
+  tile.style.setProperty('--pip-x', pip.x);
+  tile.style.setProperty('--pip-y', pip.y);
+  tile.style.setProperty('--pip-sx', pip.sx);
+  tile.style.setProperty('--pip-sy', pip.sy);
+  tile.style.setProperty('--pip-r', pip.r);
+  tile.style.setProperty('--pip-track', pip.track);
+}
 
 function renderTiles(letters, highlight){
   const el=document.getElementById('tiles');
@@ -575,9 +660,23 @@ function renderTiles(letters, highlight){
     const used=usedIdx.has(i);
     const isBlank=(lt==='*');
     div.className='tile'+(isBlank?' tile-blank':'')+(doAnim?' spin-anim':'')+(used?' used':!highlight?'':!word?'':' unused-typed');
+    applyPipStyle(div, lt, i);
     if(doAnim) div.style.animationDelay=(i*40)+'ms';
-    const display=isBlank?'★':lt;
-    div.innerHTML=`<div class="tile-let">${display}</div><div class="tile-val">${isBlank?'wild':TV[lt]??0}</div>`;
+    if(isBlank){
+      div.innerHTML=`
+        <svg class="joker-icon" viewBox="0 0 48 34" aria-hidden="true">
+          <path class="joker-base" d="M7 27H41L39 30H9Z"/>
+          <path class="joker-left" d="M9 27L15 10L24 18V27Z"/>
+          <path class="joker-mid" d="M18 27V12L24 18L30 12V27Z"/>
+          <path class="joker-right" d="M24 27V18L33 10L39 27Z"/>
+          <circle class="joker-bell" cx="15" cy="9" r="3.2"/>
+          <circle class="joker-bell" cx="24" cy="17" r="3.2"/>
+          <circle class="joker-bell" cx="33" cy="9" r="3.2"/>
+        </svg>
+        <div class="tile-val">joker</div>`;
+    } else {
+      div.innerHTML=`<div class="tile-let">${lt}</div><div class="tile-val">${TV[lt]??0}</div>`;
+    }
     el.appendChild(div);
   });
 }
@@ -587,8 +686,8 @@ function getUsedIndices(word, letters){
   const hasBlank=letters.includes('*');
   const used=new Set();
   letters.forEach((lt,i)=>{
-    if(lt==='*' && word.length>0) used.add(i);        // blank always lights up when typing
-    else if(hasBlank || inWord.has(lt)) used.add(i);  // wildcard covers everything, else normal
+    if(lt==='*' && word.length>0) used.add(i);        // joker always lights up when typing
+    else if(hasBlank || inWord.has(lt)) used.add(i);  // joker covers everything, else normal
   });
   return used;
 }
@@ -619,9 +718,24 @@ function onWordInput(){
 }
 
 function canSpell(word, letters){
-  if(letters.includes('*')) return true;  // blank = wildcard, any word is valid
+  if(letters.includes('*')) return true;  // joker can stand in for any letter
   const hand=new Set(letters);
   return word.split('').every(ch=>hand.has(ch));
+}
+
+function renderMetaBanner(banner){
+  document.getElementById('mb-head').textContent=banner.headline||'Meta-Round complete!';
+  document.getElementById('mb-sub').textContent=banner.detail||'Continue when you are ready.';
+  document.getElementById('btn-continue').textContent=banner.continue_label||'Continue';
+  document.getElementById('btn-continue').disabled=false;
+
+  const scores=[...(banner.scores||[])].sort((a,b)=>b.score-a.score);
+  document.getElementById('mb-scores').innerHTML=scores.map(row=>`
+    <div class="mb-row${row.username===banner.winner?' win':''}">
+      <div class="mb-name${row.username===G.username?' me':''}">${esc(row.username)}${row.username===G.username?' (you)':''}</div>
+      <div class="mb-score"><strong>${row.score}</strong> pts · ★${row.meta_wins}W</div>
+    </div>
+  `).join('');
 }
 
 // ── Scoreboard ────────────────────────────────────────────────────────────────
@@ -677,6 +791,19 @@ async function doPass(){
     if(d.status==='finished'){ handleWin(d); return; }
     updateUI(d);
   }catch(e){ toast(e.message); }
+}
+
+async function doContinue(){
+  const btn=document.getElementById('btn-continue');
+  btn.disabled=true;
+  try{
+    const d=await api('POST',`/spin7/${G.gameId}/continue`,{player_token:G.token});
+    if(d.status==='finished'){ handleWin(d); return; }
+    updateUI(d);
+  }catch(e){
+    toast(e.message);
+    btn.disabled=false;
+  }
 }
 
 // ── Win ───────────────────────────────────────────────────────────────────────
