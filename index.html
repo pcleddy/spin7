@@ -82,6 +82,11 @@ button:disabled{opacity:.3;cursor:not-allowed}
 /* strip */
 .strip{display:flex;justify-content:space-between;align-items:center;
   font-size:.82rem;color:var(--muted);margin-bottom:.45rem}
+.strip-right{display:flex;gap:.65rem;align-items:center}
+.menu-btn{
+  background:none;border:none;color:var(--text);font-size:1.15rem;cursor:pointer;
+  padding:0;width:auto;line-height:1
+}
 
 /* scoreboard */
 .scoreboard{display:grid;gap:.45rem;margin-bottom:.6rem}
@@ -151,6 +156,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
   100%{transform:translateY(0);opacity:1}
 }
 .tile.spin-anim{animation:tile-drop .22s ease forwards}
+.tile-actions{display:flex;justify-content:center;margin:-.1rem 0 .7rem}
 
 /* word input area */
 .word-area{margin-bottom:.55rem}
@@ -167,6 +173,17 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .word-feedback.ok  {color:var(--green)}
 .word-feedback.bad {color:var(--red)}
 .word-pts{font-size:1rem;font-weight:700;color:var(--gold)}
+
+/* round-best banner */
+.round-best{
+  border-radius:12px;padding:.7rem .85rem;margin-bottom:.65rem;border:1.5px solid transparent;
+  box-shadow:0 10px 24px rgba(8,10,20,.14)
+}
+.round-best.green{background:linear-gradient(135deg,rgba(74,222,128,.16),rgba(34,197,94,.07));border-color:rgba(74,222,128,.34)}
+.round-best.yellow{background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(245,158,11,.08));border-color:rgba(251,191,36,.34)}
+.round-best.red{background:linear-gradient(135deg,rgba(241,83,106,.2),rgba(244,114,182,.08));border-color:rgba(241,83,106,.34)}
+.rb-head{font-size:.94rem;font-weight:800;color:var(--text)}
+.rb-sub{font-size:.8rem;color:var(--muted);margin-top:.18rem}
 
 /* action row */
 .act-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.6rem}
@@ -202,6 +219,23 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .wsub{color:var(--muted);margin-bottom:.9rem;font-size:.96rem}
 .wscores{margin-bottom:.9rem;font-size:1rem;color:var(--muted)}
 .wscores div{margin:.2rem 0}
+.win-actions{display:grid;grid-template-columns:1.35fr 1fr;gap:.55rem;margin-top:.85rem}
+.win-note{font-size:.78rem;color:var(--muted);margin-top:.55rem}
+.wpanel{
+  text-align:left;background:rgba(28,28,53,.82);border:1px solid rgba(61,61,104,.82);
+  border-radius:12px;padding:.85rem .9rem;margin:.65rem 0
+}
+.wletters{display:flex;flex-wrap:wrap;gap:.3rem;margin:.25rem 0 .55rem}
+.wrecap-head{font-size:.95rem;font-weight:800;color:var(--text)}
+.wrecap-sub{font-size:.82rem;color:var(--muted);margin-top:.2rem}
+.wrecap-results{display:grid;gap:.24rem;margin-top:.55rem}
+.wrecap-line{display:flex;justify-content:space-between;gap:.6rem;font-size:.8rem;color:var(--muted)}
+.wrecap-line.best{color:var(--text);font-weight:700}
+.wtrends{display:grid;gap:.38rem}
+.wtrend{
+  font-size:.84rem;color:var(--muted);padding:.48rem .55rem;background:rgba(37,37,64,.9);
+  border-radius:9px;border:1px solid rgba(61,61,104,.65)
+}
 
 /* chat */
 .chat-log{background:var(--bg);border:1px solid var(--bor);border-radius:7px;
@@ -212,6 +246,55 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .chat-who{font-weight:700;color:var(--purple);margin-right:.35rem}
 .chat-who.me{color:var(--pink)}
 .chat-row{display:flex;gap:.45rem;align-items:center}
+
+/* right drawer */
+.drawer-backdrop{
+  position:fixed;inset:0;background:rgba(8,10,20,.58);opacity:0;pointer-events:none;
+  transition:opacity .22s ease;z-index:110
+}
+.drawer-backdrop.on{opacity:1;pointer-events:auto}
+.side-nav{
+  position:fixed;top:0;right:0;height:100vh;width:min(380px,92vw);
+  background:linear-gradient(180deg,#252540 0%,#1c1c35 100%);
+  border-left:1px solid rgba(61,61,104,.92);box-shadow:-14px 0 30px rgba(8,10,20,.3);
+  transform:translateX(104%);transition:transform .24s ease;z-index:111;
+  padding:1rem .95rem .9rem;display:flex;flex-direction:column;gap:.8rem
+}
+.side-nav.open{transform:translateX(0)}
+.nav-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem}
+.nav-title{font-size:1.08rem;font-weight:800;color:var(--text)}
+.nav-close{
+  background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;
+  padding:0;width:auto;line-height:1
+}
+.nav-section{
+  background:rgba(28,28,53,.82);border:1px solid rgba(61,61,104,.82);border-radius:12px;
+  padding:.8rem .85rem
+}
+.nav-empty{font-size:.8rem;color:var(--muted)}
+.past-boards{display:grid;gap:.6rem;max-height:42vh;overflow-y:auto;padding-right:.15rem}
+.board-card{
+  border-radius:10px;padding:.72rem .75rem;background:rgba(37,37,64,.92);border:1px solid rgba(61,61,104,.82)
+}
+.board-card.green{border-color:rgba(74,222,128,.24)}
+.board-card.yellow{border-color:rgba(251,191,36,.28)}
+.board-card.red{border-color:rgba(241,83,106,.3)}
+.board-top{display:flex;justify-content:space-between;gap:.65rem;align-items:flex-start}
+.board-meta{font-size:.8rem;font-weight:700;color:var(--text)}
+.board-best{font-size:.75rem;font-weight:800}
+.board-best.green{color:var(--green)}
+.board-best.yellow{color:var(--gold)}
+.board-best.red{color:#fb7185}
+.board-letters{display:flex;flex-wrap:wrap;gap:.26rem;margin:.45rem 0}
+.board-letter{
+  min-width:24px;height:24px;border-radius:6px;background:var(--bg);border:1px solid var(--bor);
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:var(--text)
+}
+.board-results{display:grid;gap:.22rem}
+.board-line{display:flex;justify-content:space-between;gap:.6rem;font-size:.78rem;color:var(--muted)}
+.board-line.best{color:var(--text);font-weight:700}
+.board-word{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-footer{margin-top:auto}
 
 /* toast */
 #toast{position:fixed;bottom:1.3rem;left:50%;transform:translateX(-50%);
@@ -246,7 +329,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
   <div class="card info-txt">
     <strong>How to play:</strong> On your turn, 8 unique playable letters appear. Type any valid English word
     using those letters — you can reuse the same letter as many times as you like.
-    A ★ joker is worth 0 points and can stand in for one missing letter.
+    A ★ joker is worth 0 points, can stand in for one missing letter family, and that letter only scores once.
     Score = sum of letter values, plus 2 bonus points for each letter beyond 7.
     First to the target wins that meta-round;
     most meta-round wins takes the match.
@@ -283,6 +366,8 @@ button:disabled{opacity:.3;cursor:not-allowed}
         <option value="2" selected>2 players</option>
         <option value="3">3 players</option>
         <option value="4">4 players</option>
+        <option value="5">5 players</option>
+        <option value="6">6 players</option>
       </select>
     </div>
     <button class="b-purple" onclick="doCreateConfirm()">🎰 Create Game</button>
@@ -313,18 +398,25 @@ button:disabled{opacity:.3;cursor:not-allowed}
 
   <div class="strip">
     <span>Game: <code id="g-id" style="color:var(--purple);letter-spacing:.08em"></code></span>
-    <span style="display:flex;gap:.65rem;align-items:center">
+    <span class="strip-right">
       <span id="g-info" style="color:var(--muted)"></span>
-      <button onclick="doLeave()" style="background:none;border:none;color:var(--muted);
-        font-size:.82rem;cursor:pointer;padding:0;width:auto;text-decoration:underline">Leave</button>
+      <button class="menu-btn" onclick="toggleSideNav()" aria-label="Open menu">☰</button>
     </span>
   </div>
 
   <!-- Status pill -->
   <div class="pill p-them" id="g-pill">Waiting…</div>
 
+  <div class="round-best green" id="round-best" style="display:none">
+    <div class="rb-head" id="rb-head"></div>
+    <div class="rb-sub" id="rb-sub"></div>
+  </div>
+
   <!-- 8 playable letters -->
   <div class="tiles-wrap" id="tiles"></div>
+  <div class="tile-actions">
+    <button class="b-ghost b-sm" id="btn-shuffle" onclick="shuffleCurrentLetters()" style="width:auto">🔀 Shuffle</button>
+  </div>
 
   <!-- Word input — always visible when game is playing -->
   <div class="word-area" id="word-area" style="display:none">
@@ -365,8 +457,46 @@ button:disabled{opacity:.3;cursor:not-allowed}
     <div class="log" id="g-log"></div>
   </div>
 
-  <!-- Chat -->
-  <div class="card" id="chat-card">
+</div>
+
+<!-- ══ WIN ═════════════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-win">
+  <div class="card wcenter">
+    <div class="wicon" id="w-icon">🏆</div>
+    <div class="wtitle" id="w-title">You won!</div>
+    <div class="wsub"   id="w-sub">Great game 🎉</div>
+    <div class="wscores" id="w-scores"></div>
+    <div class="wpanel" id="w-last-round" style="display:none">
+      <div class="lbl">Last Board</div>
+      <div class="wletters" id="w-letters"></div>
+      <div class="wrecap-head" id="w-recap-head"></div>
+      <div class="wrecap-sub" id="w-recap-sub"></div>
+      <div class="wrecap-results" id="w-recap-results"></div>
+    </div>
+    <div class="wpanel" id="w-trends-panel" style="display:none">
+      <div class="lbl">Fun Trends</div>
+      <div class="wtrends" id="w-trends"></div>
+    </div>
+    <div class="win-actions">
+      <button class="b-purple" id="btn-rematch" onclick="doRematch()">🔁 Same Group Again</button>
+      <button class="b-dim" onclick="doReset()">New Setup</button>
+    </div>
+    <div class="win-note">Same players, same settings, same Game ID. Any player can restart it.</div>
+  </div>
+</div>
+
+</div><!-- .wrap -->
+<div class="drawer-backdrop" id="nav-backdrop" onclick="closeSideNav()"></div>
+<aside class="side-nav" id="side-nav" aria-hidden="true">
+  <div class="nav-head">
+    <div>
+      <div class="lbl" style="margin-bottom:.18rem">Menu</div>
+      <div class="nav-title">Chat + Past Boards</div>
+    </div>
+    <button class="nav-close" onclick="closeSideNav()" aria-label="Close menu">✕</button>
+  </div>
+
+  <div class="nav-section">
     <div class="lbl">Chat</div>
     <div class="chat-log" id="chat-log"></div>
     <div class="chat-row">
@@ -377,36 +507,38 @@ button:disabled{opacity:.3;cursor:not-allowed}
     </div>
   </div>
 
-</div>
-
-<!-- ══ WIN ═════════════════════════════════════════════════════════════════ -->
-<div class="scr" id="s-win">
-  <div class="card wcenter">
-    <div class="wicon" id="w-icon">🏆</div>
-    <div class="wtitle" id="w-title">You won!</div>
-    <div class="wsub"   id="w-sub">Great game 🎉</div>
-    <div class="wscores" id="w-scores"></div>
-    <button class="b-purple" onclick="doReset()">🎰 Play Again</button>
+  <div class="nav-section">
+    <div class="lbl">Past Boards</div>
+    <div class="past-boards" id="past-boards"></div>
   </div>
-</div>
 
-</div><!-- .wrap -->
+  <div class="nav-footer">
+    <button class="b-dim b-sm" onclick="doLeave()">Leave Game</button>
+  </div>
+</aside>
 <div id="toast"></div>
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const API = 'https://masterp99-spin7-api.hf.space';
 const NAME_KEY = 'spin7_name';
+const SETTINGS_KEY = 'spin7_create_settings';
 const LENGTH_BONUS_FLOOR = 7;
 const LENGTH_BONUS_PER_LETTER = 2;
 
 const TV = {A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:7,K:6,L:1,M:3,
             N:1,O:1,P:3,Q:9,R:1,S:1,T:1,U:1,V:4,W:4,X:7,Y:4,Z:9};
 
-function scoreWord(word){
-  const base=word.split('').reduce((s,c)=>s+(TV[c]||0),0);
+function scoreWord(word, letters=[]){
+  const upper=word.toUpperCase();
+  const base=upper.split('').reduce((s,c)=>s+(TV[c]||0),0);
+  const analysis=getSpellAnalysis(upper, letters);
+  const jokerLetter=analysis.hasJoker && analysis.missing.length===1 ? analysis.missing[0] : null;
+  const jokerRepeatPenalty=jokerLetter
+    ? Math.max(0, upper.split('').filter(ch=>ch===jokerLetter).length - 1) * (TV[jokerLetter]||0)
+    : 0;
   const bonus=Math.max(0, word.length - LENGTH_BONUS_FLOOR) * LENGTH_BONUS_PER_LETTER;
-  return {base, bonus, total:base + bonus};
+  return {base, bonus, jokerLetter, jokerRepeatPenalty, total:base - jokerRepeatPenalty + bonus};
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -414,6 +546,7 @@ let G = {
   gameId:null, token:null, username:null,
   myTurn:false, pollTimer:null, lastStatus:null,
   pendingCreate:null,   // {username, rounds, target, maxPlayers}
+  menuOpen:false,
 };
 
 // ── Session restore ───────────────────────────────────────────────────────────
@@ -432,17 +565,33 @@ let G = {
 (function(){
   const savedName = getRememberedName();
   if(savedName) document.getElementById('inp-name').value = savedName;
+  hydrateRememberedSettings();
 })();
 
 function save(){ sessionStorage.setItem('spin7',JSON.stringify({gameId:G.gameId,token:G.token,username:G.username})); }
 function clearSess(){
   sessionStorage.removeItem('spin7');
   if(G.pollTimer) clearInterval(G.pollTimer);
-  G={gameId:null,token:null,username:null,myTurn:false,pollTimer:null,lastStatus:null,pendingCreate:null};
+  G={gameId:null,token:null,username:null,myTurn:false,pollTimer:null,lastStatus:null,pendingCreate:null,menuOpen:false};
+  _displayLetters=[]; _displayLetterSourceKey=''; _renderedLetterKey=''; _lastChatLen=0;
+  window._lastLetters=[]; window._lastTileHighlight=false; window._lastGameState=null;
+  closeSideNav();
 }
 function getRememberedName(){
   try{ return localStorage.getItem(NAME_KEY)||''; }
   catch(e){ return ''; }
+}
+function getRememberedSettings(){
+  try{
+    const raw=localStorage.getItem(SETTINGS_KEY);
+    if(!raw) return null;
+    const parsed=JSON.parse(raw);
+    return {
+      meta: String(parsed.meta||'3'),
+      target: String(parsed.target||'200'),
+      players: String(parsed.players||'2'),
+    };
+  }catch(e){ return null; }
 }
 function rememberName(name){
   const clean=String(name||'').trim().slice(0,20);
@@ -451,16 +600,50 @@ function rememberName(name){
     else localStorage.removeItem(NAME_KEY);
   }catch(e){}
 }
+function rememberSettings(meta,target,players){
+  try{
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+      meta:String(meta), target:String(target), players:String(players)
+    }));
+  }catch(e){}
+}
 function hydrateRememberedName(){
   document.getElementById('inp-name').value=getRememberedName();
 }
-function show(id){ document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on')); document.getElementById('s-'+id).classList.add('on'); }
+function hydrateRememberedSettings(){
+  const saved=getRememberedSettings();
+  if(!saved) return;
+  document.getElementById('sel-meta').value=saved.meta;
+  document.getElementById('sel-target').value=saved.target;
+  document.getElementById('sel-players').value=saved.players;
+}
+function show(id){
+  closeSideNav();
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+}
 function setErr(id,msg){ document.getElementById(id).textContent=msg; }
 function toast(msg,col='#e94560'){
   const el=document.getElementById('toast');
   el.textContent=msg; el.style.background=col;
   el.classList.add('on'); setTimeout(()=>el.classList.remove('on'),2800);
 }
+function openSideNav(){
+  document.getElementById('side-nav').classList.add('open');
+  document.getElementById('side-nav').setAttribute('aria-hidden','false');
+  document.getElementById('nav-backdrop').classList.add('on');
+  G.menuOpen=true;
+}
+function closeSideNav(){
+  const nav=document.getElementById('side-nav');
+  const backdrop=document.getElementById('nav-backdrop');
+  if(!nav||!backdrop) return;
+  nav.classList.remove('open');
+  nav.setAttribute('aria-hidden','true');
+  backdrop.classList.remove('on');
+  G.menuOpen=false;
+}
+function toggleSideNav(){ G.menuOpen ? closeSideNav() : openSideNav(); }
 
 // ── API ───────────────────────────────────────────────────────────────────────
 async function api(method,path,body){
@@ -500,6 +683,7 @@ async function doCreateConfirm(){
   const target  = parseInt(document.getElementById('sel-target').value);
   const maxP    = parseInt(document.getElementById('sel-players').value);
   try{
+    rememberSettings(meta,target,maxP);
     const d=await api('POST','/spin7',{username:name,num_meta_rounds:meta,score_target:target,max_players:maxP});
     G.gameId=d.game_id; G.token=d.player_token; G.username=name;
     rememberName(name);
@@ -526,7 +710,8 @@ async function doJoin(){
 async function rejoin(){
   try{
     const d=await api('GET',`/spin7/${G.gameId}`);
-    if     (d.status==='finished'){ handleWin(d); }
+    G.lastStatus=d.status;
+    if     (d.status==='finished'){ handleWin(d); startPoll(); }
     else if(d.status==='playing') { show('game'); updateUI(d); startPoll(); }
     else { updateLobby(d); show('lobby'); startPoll(); }
   }catch(e){ clearSess(); }
@@ -538,9 +723,14 @@ async function poll(){
   if(!G.gameId) return;
   try{
     const d=await api('GET',`/spin7/${G.gameId}`);
-    if(d.status==='playing' && G.lastStatus!=='playing'){ show('game'); }
+    const prevStatus=G.lastStatus;
+    if(d.status==='finished'){
+      if(prevStatus!=='finished') handleWin(d);
+      G.lastStatus='finished';
+      return;
+    }
+    if(d.status==='playing' && prevStatus!=='playing'){ show('game'); }
     G.lastStatus=d.status;
-    if(d.status==='finished'){ handleWin(d); clearInterval(G.pollTimer); return; }
     if(d.status==='playing' || d.status==='waiting') updateUI(d);
   }catch(e){}
 }
@@ -561,6 +751,8 @@ function updateLobby(d){
 // ── Main game UI ──────────────────────────────────────────────────────────────
 function updateUI(d){
   if(d.status==='waiting'){ updateLobby(d); return; }
+  window._lastLetters=d.current_letters||[];
+  window._lastGameState=d;
 
   document.getElementById('g-id').textContent=d.game_id;
   document.getElementById('g-info').textContent=
@@ -590,8 +782,8 @@ function updateUI(d){
     pill.className='pill p-you';
   }
 
-  // Tiles
-  renderTiles(d.current_letters, playing && !iHaveSubmitted && !metaBanner);
+  const tileHighlight = playing && !iHaveSubmitted && !metaBanner;
+  window._lastTileHighlight = tileHighlight;
 
   // Word input: show while playing; lock after submitting
   const wa  = document.getElementById('word-area');
@@ -599,6 +791,21 @@ function updateUI(d){
   const wb  = document.getElementById('waiting-bar');
   const mb  = document.getElementById('meta-banner');
   const inp = document.getElementById('word-input');
+  const shuffleBtn=document.getElementById('btn-shuffle');
+
+  // When letters change (new round resolved), unlock and clear the input
+  const newKey=d.current_letters.join('');
+  if(newKey !== (window._lastLetterKey||'')){
+    inp.value=''; inp.className=''; inp.disabled=false; inp.style.opacity='1';
+    document.getElementById('word-fb').textContent='';
+    document.getElementById('btn-play').disabled=true;
+    window._lastLetterKey=newKey;
+  }
+
+  renderRoundBest(d.last_round_summary);
+
+  // Tiles
+  renderCurrentTiles(tileHighlight);
 
   if(playing && metaBanner){
     wa.style.display  = 'none';
@@ -623,15 +830,7 @@ function updateUI(d){
   } else {
     wa.style.display='none'; ar.style.display='none'; wb.style.display='none'; mb.style.display='none';
   }
-
-  // When letters change (new round resolved), unlock and clear the input
-  const newKey=d.current_letters.join('');
-  if(newKey !== (window._lastLetterKey||'')){
-    inp.value=''; inp.className=''; inp.disabled=false; inp.style.opacity='1';
-    document.getElementById('word-fb').textContent='';
-    document.getElementById('btn-play').disabled=true;
-    window._lastLetterKey=newKey;
-  }
+  shuffleBtn.disabled = !d.current_letters.length || !!metaBanner;
 
   // Scoreboard
   renderScoreboard(d);
@@ -642,10 +841,13 @@ function updateUI(d){
 
   // Chat
   renderChat(d.chat);
+  renderPastBoards(d.round_history||[]);
 }
 
 // ── Tile rendering ────────────────────────────────────────────────────────────
 let _renderedLetterKey = '';
+let _displayLetters = [];
+let _displayLetterSourceKey = '';
 const PIP_STYLES = [
   {x:'-1.2px', y:'0px',   sx:'0.91', sy:'1.08', r:'-8deg', track:'0.015em'},
   {x:'0.8px',  y:'0.3px', sx:'1.08', sy:'0.9',  r:'6deg',  track:'-0.01em'},
@@ -667,15 +869,40 @@ function applyPipStyle(tile, letter, index){
   tile.style.setProperty('--pip-track', pip.track);
 }
 
-function renderTiles(letters, highlight){
+function syncDisplayLetters(sourceLetters){
+  const sourceKey=(sourceLetters||[]).join('');
+  if(sourceKey !== _displayLetterSourceKey){
+    _displayLetterSourceKey=sourceKey;
+    _displayLetters=[...(sourceLetters||[])];
+  }
+  return _displayLetters;
+}
+
+function renderCurrentTiles(highlight){
+  const sourceLetters=window._lastLetters||[];
+  const displayLetters=syncDisplayLetters(sourceLetters);
+  renderTiles(displayLetters, highlight, sourceLetters.join(''));
+}
+
+function shuffleCurrentLetters(){
+  if(!(window._lastLetters||[]).length) return;
+  const shuffled=[...syncDisplayLetters(window._lastLetters)];
+  for(let i=shuffled.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+  }
+  _displayLetters=shuffled;
+  renderTiles(_displayLetters, window._lastTileHighlight, (window._lastLetters||[]).join(''));
+}
+
+function renderTiles(letters, highlight, sourceKey=letters.join('')){
   const el=document.getElementById('tiles');
   const word=(document.getElementById('word-input').value||'').toUpperCase();
   const usedIdx=getUsedIndices(word, letters);
 
   // Only animate when the letters themselves changed (new turn), not on every poll
-  const letterKey=letters.join('');
-  const doAnim=(letterKey !== _renderedLetterKey);
-  if(doAnim) _renderedLetterKey=letterKey;
+  const doAnim=(sourceKey !== _renderedLetterKey);
+  if(doAnim) _renderedLetterKey=sourceKey;
 
   el.innerHTML='';
   letters.forEach((lt,i)=>{
@@ -734,7 +961,11 @@ function onWordInput(){
   const playBtn=document.getElementById('btn-play');
   const d_letters=(window._lastLetters)||[];
 
-  if(!word){ fb.textContent=''; inp.className=''; playBtn.disabled=true; return; }
+  if(!word){
+    fb.textContent=''; inp.className=''; playBtn.disabled=true;
+    renderCurrentTiles(window._lastTileHighlight);
+    return;
+  }
 
   // Check can make
   const analysis=getSpellAnalysis(word,d_letters);
@@ -744,17 +975,20 @@ function onWordInput(){
       : '⚠ You don\'t have these letters';
     fb.className='word-feedback bad';
     inp.className='invalid'; playBtn.disabled=true;
-    renderTiles(d_letters,true); return;
+    renderCurrentTiles(true); return;
   }
 
   // Live score preview
-  const score=scoreWord(word);
-  fb.textContent=score.bonus
-    ? `${score.total} pts preview (${score.base} + ${score.bonus} bonus)`
+  const score=scoreWord(word, d_letters);
+  const notes=[];
+  if(score.bonus) notes.push(`+${score.bonus} length bonus`);
+  if(score.jokerRepeatPenalty && score.jokerLetter) notes.push(`joker scores ${score.jokerLetter} once`);
+  fb.textContent=notes.length
+    ? `${score.total} pts preview (${notes.join(' · ')})`
     : `${score.total} pts preview`;
   fb.className='word-feedback ok';
   inp.className='valid'; playBtn.disabled=false;
-  renderTiles(d_letters,true);
+  renderCurrentTiles(true);
 }
 
 function canSpell(word, letters){
@@ -774,6 +1008,18 @@ function renderMetaBanner(banner){
       <div class="mb-score"><strong>${row.score}</strong> pts · ★${row.meta_wins}W</div>
     </div>
   `).join('');
+}
+
+function renderRoundBest(summary){
+  const el=document.getElementById('round-best');
+  if(!summary){
+    el.style.display='none';
+    return;
+  }
+  el.className=`round-best ${summary.tone||'green'}`;
+  document.getElementById('rb-head').textContent=summary.headline||'Best round';
+  document.getElementById('rb-sub').textContent=summary.detail||'';
+  el.style.display='block';
 }
 
 // ── Scoreboard ────────────────────────────────────────────────────────────────
@@ -804,6 +1050,113 @@ function renderScoreboard(d){
         <div class="sc-hist">${chips}</div>
       </div>`;
   });
+}
+
+function renderPastBoards(roundHistory){
+  const el=document.getElementById('past-boards');
+  if(!roundHistory||!roundHistory.length){
+    el.innerHTML='<div class="nav-empty">No boards yet…</div>';
+    return;
+  }
+  el.innerHTML=[...roundHistory].reverse().map(board=>{
+    const bestPlayers=new Set(board.best_players||[]);
+    const results=(board.results||[]).map(result=>`
+      <div class="board-line${bestPlayers.has(result.username)?' best':''}">
+        <span class="board-word">${esc(result.username)}: ${result.word==='—'?'pass':esc(result.word)}</span>
+        <span>+${result.points}</span>
+      </div>
+    `).join('');
+    return `
+      <div class="board-card ${board.tone||'green'}">
+        <div class="board-top">
+          <div class="board-meta">MR${board.meta_round} · R${board.round}</div>
+          <div class="board-best ${board.tone||'green'}">${board.best_points} pts best</div>
+        </div>
+        <div class="board-letters">
+          ${(board.letters||[]).map(letter=>`<span class="board-letter">${letter==='*'?'★':esc(letter)}</span>`).join('')}
+        </div>
+        <div class="board-results">${results}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function getAllPlayedWords(d){
+  return d.players.flatMap(player =>
+    (player.history||[])
+      .filter(entry=>entry.word && entry.word!=='—')
+      .map(entry=>({ ...entry, username: player.username }))
+  );
+}
+
+function buildWinTrends(d){
+  const played=getAllPlayedWords(d);
+  if(!played.length) return [];
+
+  const biggest=played.reduce((best, entry)=>
+    !best || entry.points>best.points ? entry : best
+  , null);
+  const longest=played.reduce((best, entry)=>
+    !best || entry.word.length>best.word.length || (entry.word.length===best.word.length && entry.points>best.points)
+      ? entry : best
+  , null);
+
+  const bonusByPlayer={};
+  const jokerByPlayer={};
+  const wordsByPlayer={};
+  played.forEach(entry=>{
+    bonusByPlayer[entry.username]=(bonusByPlayer[entry.username]||0)+(entry.length_bonus||0);
+    jokerByPlayer[entry.username]=(jokerByPlayer[entry.username]||0)+(entry.joker_letter?1:0);
+    wordsByPlayer[entry.username]=(wordsByPlayer[entry.username]||0)+1;
+  });
+
+  const bonusLeader=Object.entries(bonusByPlayer).sort((a,b)=>b[1]-a[1])[0];
+  const jokerLeader=Object.entries(jokerByPlayer).sort((a,b)=>b[1]-a[1])[0];
+  const wordLeader=Object.entries(wordsByPlayer).sort((a,b)=>b[1]-a[1])[0];
+
+  const trends=[
+    `Biggest hit: ${biggest.username} landed ${biggest.word} for ${biggest.points} pts.`,
+    `Longest word: ${longest.username} stretched to ${longest.word.length} letters with ${longest.word}.`,
+  ];
+  if(bonusLeader && bonusLeader[1]>0){
+    trends.push(`Bonus hunter: ${bonusLeader[0]} banked ${bonusLeader[1]} extra length-bonus pts.`);
+  } else if(jokerLeader && jokerLeader[1]>0){
+    trends.push(`Joker magic: ${jokerLeader[0]} pulled off ${jokerLeader[1]} joker play${jokerLeader[1]===1?'':'s'}.`);
+  } else if(wordLeader){
+    trends.push(`Word machine: ${wordLeader[0]} posted ${wordLeader[1]} scoring word${wordLeader[1]===1?'':'s'}.`);
+  }
+  return trends;
+}
+
+function renderWinRecap(d){
+  const lastBoard=(d.round_history||[]).slice(-1)[0];
+  const recapPanel=document.getElementById('w-last-round');
+  const trendsPanel=document.getElementById('w-trends-panel');
+
+  if(lastBoard){
+    recapPanel.style.display='block';
+    document.getElementById('w-letters').innerHTML=(lastBoard.letters||[])
+      .map(letter=>`<span class="board-letter">${letter==='*'?'★':esc(letter)}</span>`).join('');
+    document.getElementById('w-recap-head').textContent=lastBoard.headline||'Last round';
+    document.getElementById('w-recap-sub').textContent=lastBoard.detail||'';
+    const bestPlayers=new Set(lastBoard.best_players||[]);
+    document.getElementById('w-recap-results').innerHTML=(lastBoard.results||[]).map(result=>`
+      <div class="wrecap-line${bestPlayers.has(result.username)?' best':''}">
+        <span>${esc(result.username)}: ${result.word==='—'?'pass':esc(result.word)}</span>
+        <span>+${result.points}</span>
+      </div>
+    `).join('');
+  } else {
+    recapPanel.style.display='none';
+  }
+
+  const trends=buildWinTrends(d);
+  if(trends.length){
+    trendsPanel.style.display='block';
+    document.getElementById('w-trends').innerHTML=trends.map(line=>`<div class="wtrend">${esc(line)}</div>`).join('');
+  } else {
+    trendsPanel.style.display='none';
+  }
 }
 
 // ── Play / Pass ───────────────────────────────────────────────────────────────
@@ -844,14 +1197,34 @@ async function doContinue(){
   }
 }
 
+async function doRematch(){
+  const btn=document.getElementById('btn-rematch');
+  btn.disabled=true;
+  try{
+    const d=await api('POST',`/spin7/${G.gameId}/rematch`,{player_token:G.token});
+    G.lastStatus=d.status;
+    if(d.status==='playing'){
+      show('game');
+      updateUI(d);
+      startPoll();
+      toast('Rematch started!','#16a34a');
+    }
+  }catch(e){
+    toast(e.message);
+    btn.disabled=false;
+  }
+}
+
 // ── Win ───────────────────────────────────────────────────────────────────────
 function handleWin(d){
-  if(G.pollTimer) clearInterval(G.pollTimer);
-  clearSess();
-  const iWon=d.winner===G.username;
+  const myName=G.username;
+  const iWon=d.winner===myName;
+  save();
+  G.lastStatus='finished';
   document.getElementById('w-icon').textContent  = iWon?'🏆':'🎰';
   document.getElementById('w-title').textContent = iWon?'You won!':`${d.winner} won!`;
   document.getElementById('w-sub').textContent   = iWon?'Nice game! 🎉':'Better luck next time.';
+  document.getElementById('btn-rematch').disabled=false;
   const sorted=[...d.players].sort((a,b)=>b.meta_wins-a.meta_wins);
   const showWins=d.num_meta_rounds>1;
   document.getElementById('w-scores').innerHTML  =
@@ -860,6 +1233,7 @@ function handleWin(d){
       ? `<div>${esc(p.username)}: <strong>${p.meta_wins} win${p.meta_wins!==1?'s':''}</strong></div>`
       : `<div>${esc(p.username)}: <strong>${p.score} pts</strong></div>`
     ).join('');
+  renderWinRecap(d);
   show('win');
 }
 
@@ -868,6 +1242,7 @@ function doReset(){
   clearSess();
   document.getElementById('inp-gid').value='';
   hydrateRememberedName();
+  hydrateRememberedSettings();
   ['err-c','err-j','err-co'].forEach(id=>document.getElementById(id).textContent='');
   history.replaceState({},'',location.pathname);
   show('setup');
@@ -878,6 +1253,7 @@ function doLeave(){
   clearSess();
   history.replaceState({},'',location.pathname);
   hydrateRememberedName();
+  hydrateRememberedSettings();
   show('setup');
 }
 
@@ -920,15 +1296,6 @@ async function doChat(){
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// Hook letter display to poll updates
-const _origUpdateUI=updateUI;
-// Store last letters globally for input feedback
-const origUpdateUI=updateUI;
-window.updateUI=function(d){
-  window._lastLetters=d.current_letters||[];
-  origUpdateUI(d);
-};
 </script>
 </body>
 </html>
