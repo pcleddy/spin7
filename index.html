@@ -106,7 +106,9 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .tile{width:52px;height:60px;background:var(--tile);border-radius:8px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   user-select:none;transition:transform .15s,background .15s,box-shadow .15s;
+  position:relative;overflow:hidden;
   flex-shrink:0}
+.tile-face{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1}
 .tile-let{font-size:1.65rem;font-weight:800;color:var(--tile-t);line-height:1}
 .tile-val{
   font-size:.68rem;font-weight:700;color:var(--tile-v);line-height:1;margin-top:1px;
@@ -144,6 +146,27 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .joker-mid{fill:#b47ef5}
 .joker-right{fill:#4ade80}
 .joker-bell{fill:#fbbf24}
+.tile-roll-mask{
+  position:absolute;inset:0;z-index:2;overflow:hidden;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(245,230,200,.96);
+  animation:tile-roll-fade var(--roll-duration,760ms) linear forwards;
+  animation-delay:var(--roll-delay,0ms)
+}
+.tile.tile-blank .tile-roll-mask{
+  background:linear-gradient(155deg,#1d1835 0%,#38245d 58%,#5a294f 100%)
+}
+.tile-roll-strip{
+  display:flex;flex-direction:column;align-items:center;
+  animation:tile-roll var(--roll-duration,760ms) cubic-bezier(.16,.84,.22,1) forwards;
+  animation-delay:var(--roll-delay,0ms)
+}
+.tile-roll-char{
+  height:22px;display:flex;align-items:center;justify-content:center;
+  font-size:1.55rem;font-weight:800;line-height:1;color:var(--tile-t)
+}
+.tile.tile-blank .tile-roll-char{color:#f8d37a}
+.tile-roll-char.star{font-size:1.2rem}
 
 /* tile drop-in animation — gentle fade+drop, no rotation */
 @keyframes tile-drop{
@@ -151,6 +174,14 @@ button:disabled{opacity:.3;cursor:not-allowed}
   100%{transform:translateY(0);opacity:1}
 }
 .tile.spin-anim{animation:tile-drop .22s ease forwards}
+@keyframes tile-roll{
+  from{transform:translateY(0)}
+  to{transform:translateY(var(--roll-distance))}
+}
+@keyframes tile-roll-fade{
+  0%,82%{opacity:1}
+  100%{opacity:0}
+}
 
 /* word input area */
 .word-area{margin-bottom:.55rem}
@@ -646,6 +677,7 @@ const PIP_STYLES = [
   {x:'0.4px',  y:'0.6px', sx:'1.05', sy:'0.96', r:'4deg',  track:'0.005em'},
   {x:'-0.2px', y:'-0.7px',sx:'0.98', sy:'1.14', r:'-6deg', track:'0.018em'},
 ];
+const LETTER_REEL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 function applyPipStyle(tile, letter, index){
   const seed=(letter==='*' ? 31 : letter.charCodeAt(0)) + (index*7);
@@ -656,6 +688,48 @@ function applyPipStyle(tile, letter, index){
   tile.style.setProperty('--pip-sy', pip.sy);
   tile.style.setProperty('--pip-r', pip.r);
   tile.style.setProperty('--pip-track', pip.track);
+}
+
+function renderFinalTileFace(letter){
+  if(letter==='*'){
+    return `
+      <div class="tile-face">
+        <svg class="joker-icon" viewBox="0 0 48 34" aria-hidden="true">
+          <path class="joker-base" d="M7 27H41L39 30H9Z"/>
+          <path class="joker-left" d="M9 27L15 10L24 18V27Z"/>
+          <path class="joker-mid" d="M18 27V12L24 18L30 12V27Z"/>
+          <path class="joker-right" d="M24 27V18L33 10L39 27Z"/>
+          <circle class="joker-bell" cx="15" cy="9" r="3.2"/>
+          <circle class="joker-bell" cx="24" cy="17" r="3.2"/>
+          <circle class="joker-bell" cx="33" cy="9" r="3.2"/>
+        </svg>
+        <div class="tile-val">joker</div>
+      </div>`;
+  }
+  return `<div class="tile-face"><div class="tile-let">${letter}</div><div class="tile-val">${TV[letter]??0}</div></div>`;
+}
+
+function buildRollChars(letter, index){
+  const chars=[];
+  let seed=(letter==='*' ? 17 : letter.charCodeAt(0)) + (index*19);
+  for(let i=0;i<8;i++){
+    seed=(seed*29 + 11) % LETTER_REEL.length;
+    chars.push(LETTER_REEL[seed]);
+  }
+  chars.push(letter==='*' ? '★' : letter);
+  return chars;
+}
+
+function renderRollOverlay(letter, index){
+  const chars=buildRollChars(letter, index);
+  const delay=index*55;
+  const duration=760 + (index*115);
+  return `
+    <div class="tile-roll-mask" style="--roll-delay:${delay}ms;--roll-duration:${duration}ms">
+      <div class="tile-roll-strip" style="--roll-distance:-${(chars.length-1)*22}px">
+        ${chars.map(ch=>`<div class="tile-roll-char${ch==='★'?' star':''}">${ch}</div>`).join('')}
+      </div>
+    </div>`;
 }
 
 function renderTiles(letters, highlight){
@@ -676,21 +750,7 @@ function renderTiles(letters, highlight){
     div.className='tile'+(isBlank?' tile-blank':'')+(doAnim?' spin-anim':'')+(used?' used':!highlight?'':!word?'':' unused-typed');
     applyPipStyle(div, lt, i);
     if(doAnim) div.style.animationDelay=(i*40)+'ms';
-    if(isBlank){
-      div.innerHTML=`
-        <svg class="joker-icon" viewBox="0 0 48 34" aria-hidden="true">
-          <path class="joker-base" d="M7 27H41L39 30H9Z"/>
-          <path class="joker-left" d="M9 27L15 10L24 18V27Z"/>
-          <path class="joker-mid" d="M18 27V12L24 18L30 12V27Z"/>
-          <path class="joker-right" d="M24 27V18L33 10L39 27Z"/>
-          <circle class="joker-bell" cx="15" cy="9" r="3.2"/>
-          <circle class="joker-bell" cx="24" cy="17" r="3.2"/>
-          <circle class="joker-bell" cx="33" cy="9" r="3.2"/>
-        </svg>
-        <div class="tile-val">joker</div>`;
-    } else {
-      div.innerHTML=`<div class="tile-let">${lt}</div><div class="tile-val">${TV[lt]??0}</div>`;
-    }
+    div.innerHTML = renderFinalTileFace(lt) + (doAnim ? renderRollOverlay(lt, i) : '');
     el.appendChild(div);
   });
 }
