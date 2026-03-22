@@ -15,6 +15,7 @@
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);
      min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:.75rem}
 .wrap{width:100%;max-width:480px}
+body.game-mode .wrap{max-width:1080px}
 
 /* screens */
 .scr{display:none}.scr.on{display:block}
@@ -30,6 +31,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       padding:1rem 1.2rem;margin-bottom:.6rem}
 .lbl{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
      color:var(--muted);margin-bottom:.4rem}
+.game-shell{display:grid;gap:1rem;align-items:start}
+.game-main{min-width:0}
 
 /* inputs */
 input[type=text]{width:100%;padding:.62rem .9rem;border-radius:8px;
@@ -275,6 +278,13 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .board-line.best{color:var(--text);font-weight:700}
 .board-word{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+@media (min-width: 900px){
+  .game-shell{grid-template-columns:minmax(0,1fr) 320px}
+  .side-nav{position:sticky;top:.75rem;margin-bottom:0}
+  .chat-log{max-height:220px}
+  .past-boards{max-height:54vh}
+}
+
 /* toast */
 #toast{position:fixed;bottom:1.3rem;left:50%;transform:translateX(-50%);
   background:var(--red);color:#fff;padding:.42rem 1rem;border-radius:8px;
@@ -375,80 +385,84 @@ button:disabled{opacity:.3;cursor:not-allowed}
 
 <!-- ══ GAME ════════════════════════════════════════════════════════════════ -->
 <div class="scr" id="s-game">
+  <div class="game-shell">
+    <div class="game-main">
 
-  <div class="strip">
-    <span>Game: <code id="g-id" style="color:var(--purple);letter-spacing:.08em"></code></span>
-    <span id="g-info" style="color:var(--muted)"></span>
-  </div>
+      <div class="strip">
+        <span>Game: <code id="g-id" style="color:var(--purple);letter-spacing:.08em"></code></span>
+        <span id="g-info" style="color:var(--muted)"></span>
+      </div>
 
-  <!-- Status pill -->
-  <div class="pill p-them" id="g-pill">Waiting…</div>
+      <!-- Status pill -->
+      <div class="pill p-them" id="g-pill">Waiting…</div>
 
-  <aside class="side-nav" id="side-nav">
-    <div class="nav-section">
-      <div class="lbl">Chat</div>
-      <div class="chat-log" id="chat-log"></div>
-      <div class="chat-row">
-        <input type="text" id="chat-input" placeholder="Say something…" maxlength="200"
-               autocomplete="off" onkeydown="if(event.key==='Enter')doChat()"
-               style="margin-bottom:0;font-size:.92rem"/>
-        <button class="b-purple b-sm" onclick="doChat()" style="width:auto;flex-shrink:0">Send</button>
+      <!-- 8 playable letters -->
+      <div class="tiles-wrap" id="tiles"></div>
+      <div class="tile-actions">
+        <button class="b-ghost b-sm" id="btn-shuffle" onclick="shuffleCurrentLetters()" style="width:auto">🔀 Shuffle</button>
+      </div>
+
+      <!-- Word input — always visible when game is playing -->
+      <div class="word-area" id="word-area" style="display:none">
+        <div class="word-row">
+          <input type="text" id="word-input" placeholder="Type your word…"
+                 maxlength="20" autocomplete="off" autocorrect="off" spellcheck="false"
+                 oninput="onWordInput()" onkeydown="if(event.key==='Enter')doPlay()"/>
+          <button class="b-green" id="btn-play" onclick="doPlay()" disabled>Play ▶</button>
+        </div>
+        <div class="word-feedback" id="word-fb"></div>
+      </div>
+
+      <div class="card meta-banner" id="meta-banner" style="display:none">
+        <div class="lbl">Meta-Round Celebration</div>
+        <div class="mb-head" id="mb-head"></div>
+        <div class="mb-sub" id="mb-sub"></div>
+        <div class="mb-scores" id="mb-scores"></div>
+        <button class="b-gold" id="btn-continue" onclick="doContinue()">Continue</button>
+        <div class="mb-note">Any player can continue to the next meta-round.</div>
+      </div>
+
+      <!-- Scoreboard -->
+      <div class="round-best green" id="round-best" style="display:none">
+        <div class="rb-head" id="rb-head"></div>
+        <div class="rb-sub" id="rb-sub"></div>
+      </div>
+      <div class="scoreboard" id="scoreboard"></div>
+
+      <!-- Action buttons -->
+      <div class="act-row" id="act-row" style="display:none">
+        <button class="b-dim b-sm" id="btn-pass" onclick="doPass()">⏭️ Pass (0 pts)</button>
+        <button class="b-dim b-sm" onclick="doLeave()" style="color:var(--muted)">🚪 Leave Game</button>
+      </div>
+
+      <!-- Waiting indicator (shown after submitting, until round resolves) -->
+      <div id="waiting-bar" style="display:none;text-align:center;padding:.5rem 0;
+           font-size:.88rem;color:var(--muted)">⏳ Waiting for others…</div>
+
+      <!-- Log -->
+      <div class="card">
+        <div class="lbl">Activity</div>
+        <div class="log" id="g-log"></div>
       </div>
     </div>
 
-    <div class="nav-section">
-      <div class="lbl">Past Boards</div>
-      <div class="past-boards" id="past-boards"></div>
-    </div>
-  </aside>
+    <aside class="side-nav" id="side-nav">
+      <div class="nav-section">
+        <div class="lbl">Chat</div>
+        <div class="chat-log" id="chat-log"></div>
+        <div class="chat-row">
+          <input type="text" id="chat-input" placeholder="Say something…" maxlength="200"
+                 autocomplete="off" onkeydown="if(event.key==='Enter')doChat()"
+                 style="margin-bottom:0;font-size:.92rem"/>
+          <button class="b-purple b-sm" onclick="doChat()" style="width:auto;flex-shrink:0">Send</button>
+        </div>
+      </div>
 
-  <!-- 8 playable letters -->
-  <div class="tiles-wrap" id="tiles"></div>
-  <div class="tile-actions">
-    <button class="b-ghost b-sm" id="btn-shuffle" onclick="shuffleCurrentLetters()" style="width:auto">🔀 Shuffle</button>
-  </div>
-
-  <!-- Word input — always visible when game is playing -->
-  <div class="word-area" id="word-area" style="display:none">
-    <div class="word-row">
-      <input type="text" id="word-input" placeholder="Type your word…"
-             maxlength="20" autocomplete="off" autocorrect="off" spellcheck="false"
-             oninput="onWordInput()" onkeydown="if(event.key==='Enter')doPlay()"/>
-      <button class="b-green" id="btn-play" onclick="doPlay()" disabled>Play ▶</button>
-    </div>
-    <div class="word-feedback" id="word-fb"></div>
-  </div>
-
-  <div class="card meta-banner" id="meta-banner" style="display:none">
-    <div class="lbl">Meta-Round Celebration</div>
-    <div class="mb-head" id="mb-head"></div>
-    <div class="mb-sub" id="mb-sub"></div>
-    <div class="mb-scores" id="mb-scores"></div>
-    <button class="b-gold" id="btn-continue" onclick="doContinue()">Continue</button>
-    <div class="mb-note">Any player can continue to the next meta-round.</div>
-  </div>
-
-  <!-- Scoreboard -->
-  <div class="round-best green" id="round-best" style="display:none">
-    <div class="rb-head" id="rb-head"></div>
-    <div class="rb-sub" id="rb-sub"></div>
-  </div>
-  <div class="scoreboard" id="scoreboard"></div>
-
-  <!-- Action buttons -->
-  <div class="act-row" id="act-row" style="display:none">
-    <button class="b-dim b-sm" id="btn-pass" onclick="doPass()">⏭️ Pass (0 pts)</button>
-    <button class="b-dim b-sm" onclick="doLeave()" style="color:var(--muted)">🚪 Leave Game</button>
-  </div>
-
-  <!-- Waiting indicator (shown after submitting, until round resolves) -->
-  <div id="waiting-bar" style="display:none;text-align:center;padding:.5rem 0;
-       font-size:.88rem;color:var(--muted)">⏳ Waiting for others…</div>
-
-  <!-- Log -->
-  <div class="card">
-    <div class="lbl">Activity</div>
-    <div class="log" id="g-log"></div>
+      <div class="nav-section">
+        <div class="lbl">Past Boards</div>
+        <div class="past-boards" id="past-boards"></div>
+      </div>
+    </aside>
   </div>
 
 </div>
@@ -594,6 +608,7 @@ function hydrateRememberedSettings(){
   document.getElementById('sel-players').value=saved.players;
 }
 function show(id){
+  document.body.classList.toggle('game-mode', id==='game');
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
   document.getElementById('s-'+id).classList.add('on');
 }
@@ -995,7 +1010,7 @@ function onWordInput(){
   const previewText=buildPreviewText(score);
   cancelPendingWordCheck();
   inp.className='valid';
-  if(word.length > 3 && G.gameId && G.token){
+  if(word.length >= 2 && G.gameId && G.token){
     const cached=_wordCheckCache.get(word);
     if(cached === false){
       fb.textContent='⚠ Not in dictionary';
