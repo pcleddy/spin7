@@ -82,11 +82,6 @@ button:disabled{opacity:.3;cursor:not-allowed}
 /* strip */
 .strip{display:flex;justify-content:space-between;align-items:center;
   font-size:.82rem;color:var(--muted);margin-bottom:.45rem}
-.strip-right{display:flex;gap:.65rem;align-items:center}
-.menu-btn{
-  background:none;border:none;color:var(--text);font-size:1.15rem;cursor:pointer;
-  padding:0;width:auto;line-height:1
-}
 
 /* scoreboard */
 .scoreboard{display:grid;gap:.45rem;margin-bottom:.6rem}
@@ -172,6 +167,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .word-feedback{font-size:.86rem;min-height:.95rem;margin-top:.25rem}
 .word-feedback.ok  {color:var(--green)}
 .word-feedback.bad {color:var(--red)}
+.word-feedback.checking {color:var(--muted)}
 .word-pts{font-size:1rem;font-weight:700;color:var(--gold)}
 
 /* round-best banner */
@@ -247,25 +243,9 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .chat-who.me{color:var(--pink)}
 .chat-row{display:flex;gap:.45rem;align-items:center}
 
-/* right drawer */
-.drawer-backdrop{
-  position:fixed;inset:0;background:rgba(8,10,20,.58);opacity:0;pointer-events:none;
-  transition:opacity .22s ease;z-index:110
-}
-.drawer-backdrop.on{opacity:1;pointer-events:auto}
+/* side panel */
 .side-nav{
-  position:fixed;top:0;right:0;height:100vh;width:min(380px,92vw);
-  background:linear-gradient(180deg,#252540 0%,#1c1c35 100%);
-  border-left:1px solid rgba(61,61,104,.92);box-shadow:-14px 0 30px rgba(8,10,20,.3);
-  transform:translateX(104%);transition:transform .24s ease;z-index:111;
-  padding:1rem .95rem .9rem;display:flex;flex-direction:column;gap:.8rem
-}
-.side-nav.open{transform:translateX(0)}
-.nav-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem}
-.nav-title{font-size:1.08rem;font-weight:800;color:var(--text)}
-.nav-close{
-  background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;
-  padding:0;width:auto;line-height:1
+  display:flex;flex-direction:column;gap:.8rem;margin-bottom:.7rem
 }
 .nav-section{
   background:rgba(28,28,53,.82);border:1px solid rgba(61,61,104,.82);border-radius:12px;
@@ -294,7 +274,6 @@ button:disabled{opacity:.3;cursor:not-allowed}
 .board-line{display:flex;justify-content:space-between;gap:.6rem;font-size:.78rem;color:var(--muted)}
 .board-line.best{color:var(--text);font-weight:700}
 .board-word{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nav-footer{margin-top:auto}
 
 /* toast */
 #toast{position:fixed;bottom:1.3rem;left:50%;transform:translateX(-50%);
@@ -390,6 +369,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
     <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:.4rem" id="lob-note">
       Auto-starts when the lobby is full.
     </div>
+    <div style="font-size:.76rem;color:var(--muted);text-align:center;margin-top:.45rem" id="lob-settings"></div>
   </div>
 </div>
 
@@ -398,19 +378,29 @@ button:disabled{opacity:.3;cursor:not-allowed}
 
   <div class="strip">
     <span>Game: <code id="g-id" style="color:var(--purple);letter-spacing:.08em"></code></span>
-    <span class="strip-right">
-      <span id="g-info" style="color:var(--muted)"></span>
-      <button class="menu-btn" onclick="toggleSideNav()" aria-label="Open menu">☰</button>
-    </span>
+    <span id="g-info" style="color:var(--muted)"></span>
   </div>
 
   <!-- Status pill -->
   <div class="pill p-them" id="g-pill">Waiting…</div>
 
-  <div class="round-best green" id="round-best" style="display:none">
-    <div class="rb-head" id="rb-head"></div>
-    <div class="rb-sub" id="rb-sub"></div>
-  </div>
+  <aside class="side-nav" id="side-nav">
+    <div class="nav-section">
+      <div class="lbl">Chat</div>
+      <div class="chat-log" id="chat-log"></div>
+      <div class="chat-row">
+        <input type="text" id="chat-input" placeholder="Say something…" maxlength="200"
+               autocomplete="off" onkeydown="if(event.key==='Enter')doChat()"
+               style="margin-bottom:0;font-size:.92rem"/>
+        <button class="b-purple b-sm" onclick="doChat()" style="width:auto;flex-shrink:0">Send</button>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="lbl">Past Boards</div>
+      <div class="past-boards" id="past-boards"></div>
+    </div>
+  </aside>
 
   <!-- 8 playable letters -->
   <div class="tiles-wrap" id="tiles"></div>
@@ -429,16 +419,6 @@ button:disabled{opacity:.3;cursor:not-allowed}
     <div class="word-feedback" id="word-fb"></div>
   </div>
 
-  <!-- Action buttons -->
-  <div class="act-row" id="act-row" style="display:none">
-    <button class="b-dim b-sm" id="btn-pass" onclick="doPass()">⏭️ Pass (0 pts)</button>
-    <button class="b-dim b-sm" onclick="doLeave()" style="color:var(--muted)">🚪 Leave Game</button>
-  </div>
-
-  <!-- Waiting indicator (shown after submitting, until round resolves) -->
-  <div id="waiting-bar" style="display:none;text-align:center;padding:.5rem 0;
-       font-size:.88rem;color:var(--muted)">⏳ Waiting for others…</div>
-
   <div class="card meta-banner" id="meta-banner" style="display:none">
     <div class="lbl">Meta-Round Celebration</div>
     <div class="mb-head" id="mb-head"></div>
@@ -449,7 +429,21 @@ button:disabled{opacity:.3;cursor:not-allowed}
   </div>
 
   <!-- Scoreboard -->
+  <div class="round-best green" id="round-best" style="display:none">
+    <div class="rb-head" id="rb-head"></div>
+    <div class="rb-sub" id="rb-sub"></div>
+  </div>
   <div class="scoreboard" id="scoreboard"></div>
+
+  <!-- Action buttons -->
+  <div class="act-row" id="act-row" style="display:none">
+    <button class="b-dim b-sm" id="btn-pass" onclick="doPass()">⏭️ Pass (0 pts)</button>
+    <button class="b-dim b-sm" onclick="doLeave()" style="color:var(--muted)">🚪 Leave Game</button>
+  </div>
+
+  <!-- Waiting indicator (shown after submitting, until round resolves) -->
+  <div id="waiting-bar" style="display:none;text-align:center;padding:.5rem 0;
+       font-size:.88rem;color:var(--muted)">⏳ Waiting for others…</div>
 
   <!-- Log -->
   <div class="card">
@@ -486,36 +480,6 @@ button:disabled{opacity:.3;cursor:not-allowed}
 </div>
 
 </div><!-- .wrap -->
-<div class="drawer-backdrop" id="nav-backdrop" onclick="closeSideNav()"></div>
-<aside class="side-nav" id="side-nav" aria-hidden="true">
-  <div class="nav-head">
-    <div>
-      <div class="lbl" style="margin-bottom:.18rem">Menu</div>
-      <div class="nav-title">Chat + Past Boards</div>
-    </div>
-    <button class="nav-close" onclick="closeSideNav()" aria-label="Close menu">✕</button>
-  </div>
-
-  <div class="nav-section">
-    <div class="lbl">Chat</div>
-    <div class="chat-log" id="chat-log"></div>
-    <div class="chat-row">
-      <input type="text" id="chat-input" placeholder="Say something…" maxlength="200"
-             autocomplete="off" onkeydown="if(event.key==='Enter')doChat()"
-             style="margin-bottom:0;font-size:.92rem"/>
-      <button class="b-purple b-sm" onclick="doChat()" style="width:auto;flex-shrink:0">Send</button>
-    </div>
-  </div>
-
-  <div class="nav-section">
-    <div class="lbl">Past Boards</div>
-    <div class="past-boards" id="past-boards"></div>
-  </div>
-
-  <div class="nav-footer">
-    <button class="b-dim b-sm" onclick="doLeave()">Leave Game</button>
-  </div>
-</aside>
 <div id="toast"></div>
 
 <script>
@@ -541,13 +505,24 @@ function scoreWord(word, letters=[]){
   return {base, bonus, jokerLetter, jokerRepeatPenalty, total:base - jokerRepeatPenalty + bonus};
 }
 
+function buildPreviewText(score){
+  const notes=[];
+  if(score.bonus) notes.push(`+${score.bonus} length bonus`);
+  if(score.jokerRepeatPenalty && score.jokerLetter) notes.push(`joker scores ${score.jokerLetter} once`);
+  return notes.length
+    ? `${score.total} pts preview (${notes.join(' · ')})`
+    : `${score.total} pts preview`;
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let G = {
   gameId:null, token:null, username:null,
   myTurn:false, pollTimer:null, lastStatus:null,
   pendingCreate:null,   // {username, rounds, target, maxPlayers}
-  menuOpen:false,
 };
+let _wordCheckTimer = null;
+let _wordCheckSeq = 0;
+const _wordCheckCache = new Map();
 
 // ── Session restore ───────────────────────────────────────────────────────────
 (function(){
@@ -572,10 +547,11 @@ function save(){ sessionStorage.setItem('spin7',JSON.stringify({gameId:G.gameId,
 function clearSess(){
   sessionStorage.removeItem('spin7');
   if(G.pollTimer) clearInterval(G.pollTimer);
-  G={gameId:null,token:null,username:null,myTurn:false,pollTimer:null,lastStatus:null,pendingCreate:null,menuOpen:false};
+  cancelPendingWordCheck();
+  _wordCheckCache.clear();
+  G={gameId:null,token:null,username:null,myTurn:false,pollTimer:null,lastStatus:null,pendingCreate:null};
   _displayLetters=[]; _displayLetterSourceKey=''; _renderedLetterKey=''; _lastChatLen=0;
   window._lastLetters=[]; window._lastTileHighlight=false; window._lastGameState=null;
-  closeSideNav();
 }
 function getRememberedName(){
   try{ return localStorage.getItem(NAME_KEY)||''; }
@@ -618,7 +594,6 @@ function hydrateRememberedSettings(){
   document.getElementById('sel-players').value=saved.players;
 }
 function show(id){
-  closeSideNav();
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
   document.getElementById('s-'+id).classList.add('on');
 }
@@ -628,22 +603,6 @@ function toast(msg,col='#e94560'){
   el.textContent=msg; el.style.background=col;
   el.classList.add('on'); setTimeout(()=>el.classList.remove('on'),2800);
 }
-function openSideNav(){
-  document.getElementById('side-nav').classList.add('open');
-  document.getElementById('side-nav').setAttribute('aria-hidden','false');
-  document.getElementById('nav-backdrop').classList.add('on');
-  G.menuOpen=true;
-}
-function closeSideNav(){
-  const nav=document.getElementById('side-nav');
-  const backdrop=document.getElementById('nav-backdrop');
-  if(!nav||!backdrop) return;
-  nav.classList.remove('open');
-  nav.setAttribute('aria-hidden','true');
-  backdrop.classList.remove('on');
-  G.menuOpen=false;
-}
-function toggleSideNav(){ G.menuOpen ? closeSideNav() : openSideNav(); }
 
 // ── API ───────────────────────────────────────────────────────────────────────
 async function api(method,path,body){
@@ -703,7 +662,18 @@ async function doJoin(){
     const d=await api('POST',`/spin7/${gid}/join`,{username:name});
     G.gameId=gid; G.token=d.player_token; G.username=d.username||name;
     rememberName(G.username);
-    save(); show('game'); startPoll();
+    save();
+    document.getElementById('lob-id').textContent=gid;
+    const state=await api('GET',`/spin7/${gid}`);
+    G.lastStatus=state.status;
+    if(state.status==='playing'){
+      show('game');
+      updateUI(state);
+    } else {
+      updateLobby(state);
+      show('lobby');
+    }
+    startPoll();
   }catch(e){ setErr('err-j',e.message); }
 }
 
@@ -737,6 +707,7 @@ async function poll(){
 
 // ── Lobby UI ──────────────────────────────────────────────────────────────────
 function updateLobby(d){
+  document.getElementById('lob-id').textContent=d.game_id;
   const names=d.players.map(p=>p.username).join(', ');
   document.getElementById('lob-players').textContent=
     `Players (${d.players.length}/${d.max_players}): ${names}`;
@@ -746,6 +717,8 @@ function updateLobby(d){
   document.getElementById('lob-note').textContent = remaining > 0
     ? `${remaining} more player${remaining===1?'':'s'} needed before auto-start.`
     : 'Auto-starting…';
+  document.getElementById('lob-settings').textContent =
+    `${d.num_meta_rounds===1 ? '1 meta-round' : `Best of ${d.num_meta_rounds}`} · target ${d.score_target} pts · up to ${d.max_players} players`;
 }
 
 // ── Main game UI ──────────────────────────────────────────────────────────────
@@ -796,6 +769,7 @@ function updateUI(d){
   // When letters change (new round resolved), unlock and clear the input
   const newKey=d.current_letters.join('');
   if(newKey !== (window._lastLetterKey||'')){
+    cancelPendingWordCheck();
     inp.value=''; inp.className=''; inp.disabled=false; inp.style.opacity='1';
     document.getElementById('word-fb').textContent='';
     document.getElementById('btn-play').disabled=true;
@@ -953,6 +927,42 @@ function getSpellAnalysis(word, letters){
   };
 }
 
+function cancelPendingWordCheck(){
+  _wordCheckSeq += 1;
+  if(_wordCheckTimer){
+    clearTimeout(_wordCheckTimer);
+    _wordCheckTimer = null;
+  }
+}
+
+async function runWordCheck(word, score, seq){
+  const currentWordInput=document.getElementById('word-input');
+  const fb=document.getElementById('word-fb');
+  const playBtn=document.getElementById('btn-play');
+  try{
+    const result=await api('POST',`/spin7/${G.gameId}/check_word`,{player_token:G.token,word});
+    _wordCheckCache.set(word, !!result.in_dictionary);
+    if(seq !== _wordCheckSeq || currentWordInput.value.toUpperCase() !== word) return;
+    if(!result.in_dictionary){
+      fb.textContent='⚠ Not in dictionary';
+      fb.className='word-feedback bad';
+      currentWordInput.className='invalid';
+      playBtn.disabled=true;
+      return;
+    }
+    fb.textContent=buildPreviewText(score);
+    fb.className='word-feedback ok';
+    currentWordInput.className='valid';
+    playBtn.disabled=false;
+  }catch(e){
+    if(seq !== _wordCheckSeq || currentWordInput.value.toUpperCase() !== word) return;
+    fb.textContent=buildPreviewText(score);
+    fb.className='word-feedback ok';
+    currentWordInput.className='valid';
+    playBtn.disabled=false;
+  }
+}
+
 // ── Word input feedback ───────────────────────────────────────────────────────
 function onWordInput(){
   const word=document.getElementById('word-input').value.toUpperCase();
@@ -962,6 +972,7 @@ function onWordInput(){
   const d_letters=(window._lastLetters)||[];
 
   if(!word){
+    cancelPendingWordCheck();
     fb.textContent=''; inp.className=''; playBtn.disabled=true;
     renderCurrentTiles(window._lastTileHighlight);
     return;
@@ -970,6 +981,7 @@ function onWordInput(){
   // Check can make
   const analysis=getSpellAnalysis(word,d_letters);
   if(!analysis.canSpell){
+    cancelPendingWordCheck();
     fb.textContent=(analysis.hasJoker && analysis.missing.length>1)
       ? '⚠ Joker can only cover one missing letter'
       : '⚠ You don\'t have these letters';
@@ -980,14 +992,37 @@ function onWordInput(){
 
   // Live score preview
   const score=scoreWord(word, d_letters);
-  const notes=[];
-  if(score.bonus) notes.push(`+${score.bonus} length bonus`);
-  if(score.jokerRepeatPenalty && score.jokerLetter) notes.push(`joker scores ${score.jokerLetter} once`);
-  fb.textContent=notes.length
-    ? `${score.total} pts preview (${notes.join(' · ')})`
-    : `${score.total} pts preview`;
+  const previewText=buildPreviewText(score);
+  cancelPendingWordCheck();
+  inp.className='valid';
+  if(word.length > 3 && G.gameId && G.token){
+    const cached=_wordCheckCache.get(word);
+    if(cached === false){
+      fb.textContent='⚠ Not in dictionary';
+      fb.className='word-feedback bad';
+      inp.className='invalid';
+      playBtn.disabled=true;
+      renderCurrentTiles(true);
+      return;
+    }
+    if(cached === true){
+      fb.textContent=previewText;
+      fb.className='word-feedback ok';
+      playBtn.disabled=false;
+      renderCurrentTiles(true);
+      return;
+    }
+    const seq=_wordCheckSeq;
+    fb.textContent=`${previewText} · checking word…`;
+    fb.className='word-feedback checking';
+    playBtn.disabled=true;
+    _wordCheckTimer=setTimeout(()=>runWordCheck(word, score, seq), 220);
+    renderCurrentTiles(true);
+    return;
+  }
+  fb.textContent=previewText;
   fb.className='word-feedback ok';
-  inp.className='valid'; playBtn.disabled=false;
+  playBtn.disabled=false;
   renderCurrentTiles(true);
 }
 
@@ -1161,6 +1196,7 @@ function renderWinRecap(d){
 
 // ── Play / Pass ───────────────────────────────────────────────────────────────
 async function doPlay(){
+  if(document.getElementById('btn-play').disabled) return;
   const word=document.getElementById('word-input').value.trim().toUpperCase();
   if(!word) return;
   document.getElementById('btn-play').disabled=true;
