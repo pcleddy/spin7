@@ -9,3 +9,9 @@ GitHub repo: [https://github.com/pcleddy/spin7](https://github.com/pcleddy/spin7
 - `spin7-frontend/` — GitHub Pages frontend
 - `spin7-api/` — FastAPI backend
 - `SPEC.md` — product and technical spec
+
+## Testing
+
+```bash
+node --test tests/game_logic.test.js
+```

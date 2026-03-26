@@ -25,6 +25,13 @@ body.game-mode .wrap{max-width:1080px}
 .hdr h1{font-size:2.4rem;background:linear-gradient(135deg,var(--purple),var(--pink));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hdr p{color:var(--muted);font-size:.92rem;margin-top:.2rem}
+.hdr-tools{display:flex;justify-content:center;margin-top:.55rem}
+.mini-toggle{
+  width:auto;display:inline-flex;align-items:center;gap:.38rem;padding:.42rem .75rem;
+  border-radius:999px;border:1.5px solid rgba(180,126,245,.24);background:rgba(37,37,64,.82);
+  color:var(--muted);font-size:.8rem;font-weight:700
+}
+.mini-toggle.on{color:var(--text);border-color:rgba(180,126,245,.52);box-shadow:0 0 0 1px rgba(180,126,245,.16)}
 
 /* card */
 .card{background:var(--sur);border:1px solid var(--bor);border-radius:14px;
@@ -291,6 +298,20 @@ button:disabled{opacity:.3;cursor:not-allowed}
   font-size:.88rem;font-weight:600;opacity:0;transition:opacity .3s;
   pointer-events:none;white-space:nowrap;z-index:99}
 #toast.on{opacity:1}
+#affirmation{
+  position:fixed;top:1.15rem;left:50%;transform:translate(-50%,-12px) scale(.96);
+  min-width:220px;max-width:min(90vw,420px);padding:.8rem .95rem;border-radius:16px;
+  background:linear-gradient(135deg,rgba(180,126,245,.95),rgba(244,114,182,.94));
+  color:#fff;font-size:1.02rem;font-weight:800;letter-spacing:.01em;text-align:center;
+  border:1px solid rgba(255,255,255,.18);box-shadow:0 16px 34px rgba(10,10,22,.26);
+  opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:110
+}
+#affirmation.on{opacity:1;transform:translate(-50%,0) scale(1)}
+#affirmation.green{background:linear-gradient(135deg,rgba(34,197,94,.95),rgba(74,222,128,.88))}
+#affirmation.yellow{background:linear-gradient(135deg,rgba(245,158,11,.95),rgba(251,191,36,.88))}
+#affirmation.red{background:linear-gradient(135deg,rgba(225,29,72,.95),rgba(244,114,182,.9))}
+#affirmation.gold{background:linear-gradient(135deg,rgba(245,158,11,.95),rgba(180,126,245,.9))}
+#affirmation .aff-sub{display:block;font-size:.76rem;font-weight:600;opacity:.88;margin-top:.2rem;letter-spacing:.02em}
 .pulse{animation:pulse 1.6s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .info-txt{font-size:.9rem;color:var(--muted);line-height:1.6}
@@ -299,7 +320,13 @@ button:disabled{opacity:.3;cursor:not-allowed}
 </head>
 <body>
 <div class="wrap">
-<div class="hdr"><h1>🎰 Spin7</h1><p>8 playable letters · form a word · best score wins</p></div>
+<div class="hdr">
+  <h1>🎰 Spin7</h1>
+  <p>8 playable letters · form a word · best score wins</p>
+  <div class="hdr-tools">
+    <button type="button" class="mini-toggle on" id="btn-sound" onclick="toggleSound()">🔊 Sound on</button>
+  </div>
+</div>
 
 <!-- ══ SETUP ══════════════════════════════════════════════════════════════ -->
 <div class="scr on" id="s-setup">
@@ -494,39 +521,30 @@ button:disabled{opacity:.3;cursor:not-allowed}
 </div>
 
 </div><!-- .wrap -->
+<div id="affirmation"></div>
 <div id="toast"></div>
 
+<script src="./game_logic.js"></script>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const API = 'https://masterp99-spin7-api.hf.space';
 const NAME_KEY = 'spin7_name';
 const SETTINGS_KEY = 'spin7_create_settings';
-const LENGTH_BONUS_FLOOR = 7;
-const LENGTH_BONUS_PER_LETTER = 2;
-
-const TV = {A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:7,K:6,L:1,M:3,
-            N:1,O:1,P:3,Q:9,R:1,S:1,T:1,U:1,V:4,W:4,X:7,Y:4,Z:9};
-
-function scoreWord(word, letters=[]){
-  const upper=word.toUpperCase();
-  const base=upper.split('').reduce((s,c)=>s+(TV[c]||0),0);
-  const analysis=getSpellAnalysis(upper, letters);
-  const jokerLetter=analysis.hasJoker && analysis.missing.length===1 ? analysis.missing[0] : null;
-  const jokerRepeatPenalty=jokerLetter
-    ? Math.max(0, upper.split('').filter(ch=>ch===jokerLetter).length - 1) * (TV[jokerLetter]||0)
-    : 0;
-  const bonus=Math.max(0, word.length - LENGTH_BONUS_FLOOR) * LENGTH_BONUS_PER_LETTER;
-  return {base, bonus, jokerLetter, jokerRepeatPenalty, total:base - jokerRepeatPenalty + bonus};
-}
-
-function buildPreviewText(score){
-  const notes=[];
-  if(score.bonus) notes.push(`+${score.bonus} length bonus`);
-  if(score.jokerRepeatPenalty && score.jokerLetter) notes.push(`joker scores ${score.jokerLetter} once`);
-  return notes.length
-    ? `${score.total} pts preview (${notes.join(' · ')})`
-    : `${score.total} pts preview`;
-}
+const SOUND_KEY = 'spin7_sound_enabled';
+const {
+  TILE_VALUES: TV,
+  LENGTH_BONUS_FLOOR,
+  LENGTH_BONUS_PER_LETTER,
+  scoreWord,
+  buildPreviewText,
+  getSpellAnalysis,
+} = window.Spin7Logic;
+const AFFIRMATIONS = {
+  green:['Nice one!','Clean hit!','Solid round!','Sweet play!'],
+  yellow:['Excellent!','Sharp score!','Lovely hit!','Very nice!'],
+  red:['Huge round!','What a rip!','Monster score!','That landed!'],
+  gold:['Meta-round taken!','Beautiful finish!','Crowd goes wild!','Match point magic!'],
+};
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let G = {
@@ -537,6 +555,13 @@ let G = {
 let _wordCheckTimer = null;
 let _wordCheckSeq = 0;
 const _wordCheckCache = new Map();
+let _soundEnabled = getRememberedSoundEnabled();
+let _audioCtx = null;
+let _noiseBuffer = null;
+let _affirmationTimer = null;
+let _lastCelebratedRoundKey = null;
+let _lastMetaBannerKey = null;
+let _lastWinKey = null;
 
 // ── Session restore ───────────────────────────────────────────────────────────
 (function(){
@@ -555,7 +580,10 @@ const _wordCheckCache = new Map();
   const savedName = getRememberedName();
   if(savedName) document.getElementById('inp-name').value = savedName;
   hydrateRememberedSettings();
+  updateSoundButton();
 })();
+document.addEventListener('pointerdown', primeAudio, {passive:true});
+document.addEventListener('keydown', primeAudio);
 
 function save(){ sessionStorage.setItem('spin7',JSON.stringify({gameId:G.gameId,token:G.token,username:G.username})); }
 function clearSess(){
@@ -565,6 +593,7 @@ function clearSess(){
   _wordCheckCache.clear();
   G={gameId:null,token:null,username:null,myTurn:false,pollTimer:null,lastStatus:null,pendingCreate:null};
   _displayLetters=[]; _displayLetterSourceKey=''; _renderedLetterKey=''; _lastChatLen=0;
+  _lastCelebratedRoundKey=null; _lastMetaBannerKey=null; _lastWinKey=null;
   window._lastLetters=[]; window._lastTileHighlight=false; window._lastGameState=null;
 }
 function getRememberedName(){
@@ -607,6 +636,33 @@ function hydrateRememberedSettings(){
   document.getElementById('sel-target').value=saved.target;
   document.getElementById('sel-players').value=saved.players;
 }
+function getRememberedSoundEnabled(){
+  try{
+    const raw=localStorage.getItem(SOUND_KEY);
+    return raw===null ? true : raw==='1';
+  }catch(e){ return true; }
+}
+function rememberSoundEnabled(enabled){
+  _soundEnabled=!!enabled;
+  try{ localStorage.setItem(SOUND_KEY, _soundEnabled ? '1' : '0'); }
+  catch(e){}
+  updateSoundButton();
+}
+function updateSoundButton(){
+  const btn=document.getElementById('btn-sound');
+  if(!btn) return;
+  btn.classList.toggle('on', _soundEnabled);
+  btn.textContent=_soundEnabled ? '🔊 Sound on' : '🔈 Sound off';
+}
+function toggleSound(){
+  rememberSoundEnabled(!_soundEnabled);
+  if(_soundEnabled){
+    primeAudio();
+    toast('Sound on','#16a34a');
+  } else {
+    toast('Sound off','#64748b');
+  }
+}
 function show(id){
   document.body.classList.toggle('game-mode', id==='game');
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
@@ -617,6 +673,146 @@ function toast(msg,col='#e94560'){
   const el=document.getElementById('toast');
   el.textContent=msg; el.style.background=col;
   el.classList.add('on'); setTimeout(()=>el.classList.remove('on'),2800);
+}
+function pickAffirmation(tone='green'){
+  const pool=AFFIRMATIONS[tone]||AFFIRMATIONS.green;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function showAffirmation(title, sub='', tone='green'){
+  const el=document.getElementById('affirmation');
+  if(!el) return;
+  el.className=tone;
+  el.innerHTML=`${esc(title)}${sub?`<span class="aff-sub">${esc(sub)}</span>`:''}`;
+  el.classList.add('on');
+  if(_affirmationTimer) clearTimeout(_affirmationTimer);
+  _affirmationTimer=setTimeout(()=>el.classList.remove('on'),2200);
+}
+function primeAudio(){
+  if(!_soundEnabled) return null;
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  if(!Ctx) return null;
+  if(!_audioCtx) _audioCtx=new Ctx();
+  if(_audioCtx.state==='suspended') _audioCtx.resume().catch(()=>{});
+  return _audioCtx;
+}
+function getNoiseBuffer(ctx){
+  if(_noiseBuffer) return _noiseBuffer;
+  const buffer=ctx.createBuffer(1, ctx.sampleRate*0.22, ctx.sampleRate);
+  const data=buffer.getChannelData(0);
+  for(let i=0;i<data.length;i+=1) data[i]=(Math.random()*2)-1;
+  _noiseBuffer=buffer;
+  return _noiseBuffer;
+}
+function playTone(freq, start, duration, opts={}){
+  const ctx=primeAudio();
+  if(!ctx) return;
+  const {
+    type='sine', gain=.06, attack=.01, release=.14, detune=0,
+  } = opts;
+  const osc=ctx.createOscillator();
+  const amp=ctx.createGain();
+  osc.type=type;
+  osc.frequency.setValueAtTime(freq, start);
+  osc.detune.setValueAtTime(detune, start);
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.linearRampToValueAtTime(gain, start+attack);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start+Math.max(duration, attack+0.02)+release);
+  osc.connect(amp).connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start+Math.max(duration, attack+0.02)+release+0.02);
+}
+function playNoiseBurst(start, duration, opts={}){
+  const ctx=primeAudio();
+  if(!ctx) return;
+  const {
+    gain=.05, low=500, high=2200,
+  } = opts;
+  const src=ctx.createBufferSource();
+  const filter=ctx.createBiquadFilter();
+  const amp=ctx.createGain();
+  src.buffer=getNoiseBuffer(ctx);
+  filter.type='bandpass';
+  filter.frequency.setValueAtTime((low+high)/2, start);
+  filter.Q.setValueAtTime(0.9, start);
+  amp.gain.setValueAtTime(0.0001, start);
+  amp.gain.linearRampToValueAtTime(gain, start+0.01);
+  amp.gain.exponentialRampToValueAtTime(0.0001, start+duration);
+  src.connect(filter).connect(amp).connect(ctx.destination);
+  src.start(start);
+  src.stop(start+duration+0.02);
+}
+function playRoundSound(tone='green'){
+  const ctx=primeAudio();
+  if(!ctx) return;
+  const t=ctx.currentTime+0.01;
+  if(tone==='red'){
+    playTone(392,t,0.12,{type:'triangle',gain:.05});
+    playTone(587,t+0.07,0.16,{type:'triangle',gain:.06});
+    playTone(784,t+0.14,0.22,{type:'sine',gain:.07});
+  }else if(tone==='yellow'){
+    playTone(523.25,t,0.12,{type:'triangle',gain:.05});
+    playTone(659.25,t+0.08,0.18,{type:'sine',gain:.06});
+  }else{
+    playTone(440,t,0.1,{type:'triangle',gain:.045});
+    playTone(554.37,t+0.07,0.14,{type:'sine',gain:.055});
+  }
+}
+function playCelebrateSound(kind='meta'){
+  const ctx=primeAudio();
+  if(!ctx) return;
+  const t=ctx.currentTime+0.01;
+  playTone(523.25,t,0.12,{type:'triangle',gain:.05});
+  playTone(659.25,t+0.1,0.15,{type:'triangle',gain:.055});
+  playTone(783.99,t+0.19,0.24,{type:'sine',gain:.07});
+  if(kind==='win'){
+    playTone(1046.5,t+0.31,0.28,{type:'sine',gain:.08});
+    [0.08,0.19,0.3,0.41].forEach((offset,i)=>playNoiseBurst(t+offset,0.12,{gain:.035+(i*0.004)}));
+  }else{
+    [0.1,0.22].forEach(offset=>playNoiseBurst(t+offset,0.11,{gain:.03}));
+  }
+}
+function maybeCelebrateRound(d){
+  const lastBoard=(d.round_history||[]).slice(-1)[0];
+  if(!lastBoard){
+    _lastCelebratedRoundKey='';
+    return;
+  }
+  const key=`${lastBoard.meta_round}:${lastBoard.round}`;
+  if(_lastCelebratedRoundKey===null){
+    _lastCelebratedRoundKey=key;
+    return;
+  }
+  if(key===_lastCelebratedRoundKey) return;
+  _lastCelebratedRoundKey=key;
+  const tone=lastBoard.tone||'green';
+  const iBest=(lastBoard.best_players||[]).includes(G.username);
+  const title=iBest ? pickAffirmation(tone) : (lastBoard.headline||'Round locked in');
+  const sub=iBest
+    ? `${lastBoard.best_points||0} pts on that board`
+    : (lastBoard.detail||`${lastBoard.best_points||0} pts led the board`);
+  showAffirmation(title, sub, tone);
+  playRoundSound(tone);
+}
+function maybeCelebrateMetaBanner(d){
+  const banner=d.meta_round_banner;
+  if(!banner){
+    _lastMetaBannerKey='';
+    return;
+  }
+  const key=`${banner.winner}:${banner.headline||''}:${d.meta_round}:${d.round_num}`;
+  if(_lastMetaBannerKey===null){
+    _lastMetaBannerKey=key;
+    return;
+  }
+  if(key===_lastMetaBannerKey) return;
+  _lastMetaBannerKey=key;
+  const iWon=banner.winner===G.username;
+  showAffirmation(
+    iWon ? pickAffirmation('gold') : `${banner.winner} took the meta-round`,
+    banner.detail||'Continue when ready.',
+    'gold'
+  );
+  playCelebrateSound('meta');
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -696,7 +892,7 @@ async function rejoin(){
   try{
     const d=await api('GET',`/spin7/${G.gameId}`);
     G.lastStatus=d.status;
-    if     (d.status==='finished'){ handleWin(d); startPoll(); }
+    if     (d.status==='finished'){ handleWin(d,{celebrate:false}); startPoll(); }
     else if(d.status==='playing') { show('game'); updateUI(d); startPoll(); }
     else { updateLobby(d); show('lobby'); startPoll(); }
   }catch(e){ clearSess(); }
@@ -710,7 +906,7 @@ async function poll(){
     const d=await api('GET',`/spin7/${G.gameId}`);
     const prevStatus=G.lastStatus;
     if(d.status==='finished'){
-      if(prevStatus!=='finished') handleWin(d);
+      if(prevStatus!=='finished') handleWin(d,{celebrate:prevStatus==='playing' || prevStatus==='waiting'});
       G.lastStatus='finished';
       return;
     }
@@ -831,6 +1027,8 @@ function updateUI(d){
   // Chat
   renderChat(d.chat);
   renderPastBoards(d.round_history||[]);
+  maybeCelebrateRound(d);
+  maybeCelebrateMetaBanner(d);
 }
 
 // ── Tile rendering ────────────────────────────────────────────────────────────
@@ -931,17 +1129,6 @@ function getUsedIndices(word, letters){
   return used;
 }
 
-function getSpellAnalysis(word, letters){
-  const hand=new Set(letters.filter(lt=>lt!=='*'));
-  const missing=[...new Set(word.split('').filter(ch=>!hand.has(ch)))];
-  const hasJoker=letters.includes('*');
-  return {
-    missing,
-    hasJoker,
-    canSpell: missing.length===0 || (hasJoker && missing.length===1),
-  };
-}
-
 function cancelPendingWordCheck(){
   _wordCheckSeq += 1;
   if(_wordCheckTimer){
@@ -1039,10 +1226,6 @@ function onWordInput(){
   fb.className='word-feedback ok';
   playBtn.disabled=false;
   renderCurrentTiles(true);
-}
-
-function canSpell(word, letters){
-  return getSpellAnalysis(word, letters).canSpell;
 }
 
 function renderMetaBanner(banner){
@@ -1218,7 +1401,7 @@ async function doPlay(){
   try{
     const d=await api('POST',`/spin7/${G.gameId}/play`,{player_token:G.token,word});
     window._lastLetters=d.current_letters||[];
-    if(d.status==='finished'){ handleWin(d); return; }
+    if(d.status==='finished'){ handleWin(d,{celebrate:true}); return; }
     // Keep word visible; updateUI will lock input until round resolves
     updateUI(d);
   }catch(e){
@@ -1230,7 +1413,7 @@ async function doPlay(){
 async function doPass(){
   try{
     const d=await api('POST',`/spin7/${G.gameId}/pass`,{player_token:G.token});
-    if(d.status==='finished'){ handleWin(d); return; }
+    if(d.status==='finished'){ handleWin(d,{celebrate:true}); return; }
     updateUI(d);
   }catch(e){ toast(e.message); }
 }
@@ -1240,7 +1423,7 @@ async function doContinue(){
   btn.disabled=true;
   try{
     const d=await api('POST',`/spin7/${G.gameId}/continue`,{player_token:G.token});
-    if(d.status==='finished'){ handleWin(d); return; }
+    if(d.status==='finished'){ handleWin(d,{celebrate:true}); return; }
     updateUI(d);
   }catch(e){
     toast(e.message);
@@ -1255,6 +1438,7 @@ async function doRematch(){
     const d=await api('POST',`/spin7/${G.gameId}/rematch`,{player_token:G.token});
     G.lastStatus=d.status;
     if(d.status==='playing'){
+      _lastWinKey='';
       show('game');
       updateUI(d);
       startPoll();
@@ -1267,11 +1451,19 @@ async function doRematch(){
 }
 
 // ── Win ───────────────────────────────────────────────────────────────────────
-function handleWin(d){
+function handleWin(d, opts={}){
   const myName=G.username;
   const iWon=d.winner===myName;
+  const celebrate=!!opts.celebrate;
+  const winKey=`${d.game_id}:${d.winner}:${(d.round_history||[]).length}:${(d.round_history||[]).slice(-1).map(b=>`${b.meta_round}:${b.round}:${b.best_points}`).join('|')}`;
+  const isNewWin=winKey!==_lastWinKey;
   save();
   G.lastStatus='finished';
+  if(celebrate && isNewWin){
+    showAffirmation(iWon ? 'Champion!' : `${d.winner} wins`, iWon ? 'Beautiful game.' : 'That one is in the books.', 'gold');
+    playCelebrateSound('win');
+  }
+  _lastWinKey=winKey;
   document.getElementById('w-icon').textContent  = iWon?'🏆':'🎰';
   document.getElementById('w-title').textContent = iWon?'You won!':`${d.winner} won!`;
   document.getElementById('w-sub').textContent   = iWon?'Nice game! 🎉':'Better luck next time.';
@@ -1327,6 +1519,7 @@ let _lastChatLen = 0;
 function renderChat(msgs){
   const el=document.getElementById('chat-log');
   if(!msgs||!msgs.length){ el.innerHTML='<span style="color:var(--muted);font-size:.78rem">No messages yet…</span>'; _lastChatLen=0; return; }
+  const prevLen=_lastChatLen;
   if(msgs.length===_lastChatLen) return;  // nothing new
   _lastChatLen=msgs.length;
   el.innerHTML=msgs.map(m=>`
@@ -1334,6 +1527,9 @@ function renderChat(msgs){
       <span class="chat-who${m.username===G.username?' me':''}">${esc(m.username)}</span>${esc(m.text)}
     </div>`).join('');
   el.scrollTop=el.scrollHeight;
+  if(prevLen>0 && msgs[msgs.length-1] && msgs[msgs.length-1].username!==G.username){
+    playTone(659.25, (primeAudio()?.currentTime||0)+0.01, 0.08, {type:'triangle',gain:.03});
+  }
 }
 
 async function doChat(){
