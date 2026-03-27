@@ -29,3 +29,29 @@ Project-wide local runner:
 ```bash
 ./run_tests.sh
 ```
+
+## Local Preview
+
+Build a local frontend copy that points at a local API and stores the files in an ignored repo directory:
+
+```bash
+./run_local_preview.sh --build-only
+```
+
+Serve it directly:
+
+```bash
+./run_local_preview.sh
+```
+
+Defaults:
+
+- frontend files go to `.local-run/`
+- frontend serves on `http://127.0.0.1:8000`
+- API target is `http://127.0.0.1:8001`
+
+You can override those with:
+
+```bash
+SPIN7_API_URL=http://127.0.0.1:9001 SPIN7_PREVIEW_PORT=8010 ./run_local_preview.sh
+```
